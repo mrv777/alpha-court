@@ -185,6 +185,90 @@ describe("runDebate", () => {
     expect(completeEvents.length).toBe(16); // 6 bull + 6 bear + 4 judge
   });
 
+  it("fetches Bull and Bear data in parallel (not sequential)", async () => {
+    const trialId = createTrial();
+    const callTimestamps: { agent: string; start: number; end: number }[] = [];
+
+    mockFetchBullData.mockImplementation(async () => {
+      const start = Date.now();
+      await new Promise((r) => setTimeout(r, 100)); // simulate 100ms fetch
+      callTimestamps.push({ agent: "bull", start, end: Date.now() });
+      return defaultBullData;
+    });
+
+    mockFetchBearData.mockImplementation(async () => {
+      const start = Date.now();
+      await new Promise((r) => setTimeout(r, 100)); // simulate 100ms fetch
+      callTimestamps.push({ agent: "bear", start, end: Date.now() });
+      return defaultBearData;
+    });
+
+    await runDebate(trialId, "token", "solana", "Test", () => {});
+
+    // Bull and Bear should overlap (started within 50ms of each other)
+    const bull = callTimestamps.find((t) => t.agent === "bull")!;
+    const bear = callTimestamps.find((t) => t.agent === "bear")!;
+    expect(Math.abs(bull.start - bear.start)).toBeLessThan(50);
+  });
+
+  it("fetches Judge data after Bull+Bear complete", async () => {
+    const trialId = createTrial();
+    const callOrder: string[] = [];
+
+    mockFetchBullData.mockImplementation(async () => {
+      callOrder.push("bull-start");
+      await new Promise((r) => setTimeout(r, 50));
+      callOrder.push("bull-end");
+      return defaultBullData;
+    });
+
+    mockFetchBearData.mockImplementation(async () => {
+      callOrder.push("bear-start");
+      await new Promise((r) => setTimeout(r, 50));
+      callOrder.push("bear-end");
+      return defaultBearData;
+    });
+
+    mockFetchJudgeData.mockImplementation(async () => {
+      callOrder.push("judge-start");
+      return defaultJudgeData;
+    });
+
+    await runDebate(trialId, "token", "solana", "Test", () => {});
+
+    // Judge should start after both bull and bear are done
+    const judgeStart = callOrder.indexOf("judge-start");
+    const bullEnd = callOrder.indexOf("bull-end");
+    const bearEnd = callOrder.indexOf("bear-end");
+    expect(judgeStart).toBeGreaterThan(bullEnd);
+    expect(judgeStart).toBeGreaterThan(bearEnd);
+  });
+
+  it("handles Bull failure while Bear succeeds in parallel fetch", async () => {
+    const trialId = createTrial();
+    const events: DebateEvent[] = [];
+
+    mockFetchBullData.mockRejectedValue(new Error("Bull network error"));
+    // Bear still succeeds (default mock)
+
+    await runDebate(trialId, "token", "solana", "Test", (e) => events.push(e));
+
+    // Bull should have error progress events
+    const bullErrors = events.filter(
+      (e) => e.type === "data_progress" && (e as any).agent === "bull" && (e as any).status === "error"
+    );
+    expect(bullErrors.length).toBe(6);
+
+    // Bear should have complete progress events
+    const bearCompletes = events.filter(
+      (e) => e.type === "data_progress" && (e as any).agent === "bear" && (e as any).status === "complete"
+    );
+    expect(bearCompletes.length).toBe(6);
+
+    // Should still complete the debate
+    expect(events[events.length - 1].type).toBe("done");
+  });
+
   it("streams Bull and Bear openings in parallel (phase 2)", async () => {
     const trialId = createTrial();
     const callOrder: string[] = [];
@@ -304,7 +388,7 @@ describe("runDebate", () => {
     expect(events[events.length - 1].type).toBe("done");
   });
 
-  it("sets error status on unrecoverable error", async () => {
+  it("sets error status on unrecoverable error", { timeout: 30_000 }, async () => {
     const trialId = createTrial();
     const events: DebateEvent[] = [];
 

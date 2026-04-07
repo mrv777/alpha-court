@@ -6,12 +6,26 @@ import {
 } from "@/lib/nansen/endpoints";
 import { getDexScreenerToken } from "@/lib/data/dexscreener";
 import { getJupiterPrice } from "@/lib/data/jupiter";
+import { log } from "@/lib/logger";
 import type { BullData } from "./types";
 import { FAST } from "@/lib/llm";
 
 export { FAST as BULL_MODEL };
 
 // ── Data fetching ──────────────────────────────────────────────────────
+
+/** Wrap a fetch call with timing log */
+async function timed<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  const start = Date.now();
+  try {
+    const result = await fn();
+    log.info(`bull endpoint done`, { endpoint: name, durationMs: Date.now() - start });
+    return result;
+  } catch (err) {
+    log.error(`bull endpoint error`, { endpoint: name, durationMs: Date.now() - start, error: err instanceof Error ? err.message : String(err) });
+    throw err;
+  }
+}
 
 /**
  * Fetch all data sources for the Bull agent concurrently.
@@ -21,23 +35,26 @@ export async function fetchBullData(
   tokenAddress: string,
   chain: string
 ): Promise<BullData> {
+  const start = Date.now();
   const [smNetflow, whoBought, flowIntelligence, profilerPnl, dexScreener, jupiterPrice] =
     await Promise.all([
-      getSmNetflow(chain, tokenAddress).then((r) => (r.success ? r.data : null)),
-      getWhoBoughtSold(chain, tokenAddress, "buy").then((r) => (r.success ? r.data : null)),
-      getTokenFlowIntelligence(chain, tokenAddress).then((r) => (r.success ? r.data : null)),
-      // Use a known top buyer address if available, otherwise skip profiler
-      getWhoBoughtSold(chain, tokenAddress, "buy").then((r) => {
-        if (r.success && r.data && Array.isArray(r.data) && r.data.length > 0) {
-          return getProfilerPnlSummary(r.data[0].address, chain).then((p) =>
-            p.success ? p.data : null
-          );
-        }
-        return null;
-      }),
-      getDexScreenerToken(tokenAddress, chain).then((r) => (r.success ? r.data : null)),
-      getJupiterPrice(tokenAddress).then((r) => (r.success ? r.data : null)),
+      timed("smart-money-netflow", () => getSmNetflow(chain, tokenAddress).then((r) => (r.success ? r.data : null))),
+      timed("who-bought-sold-buy", () => getWhoBoughtSold(chain, tokenAddress, "buy").then((r) => (r.success ? r.data : null))),
+      timed("flow-intelligence", () => getTokenFlowIntelligence(chain, tokenAddress).then((r) => (r.success ? r.data : null))),
+      timed("profiler-pnl-buyers", () =>
+        getWhoBoughtSold(chain, tokenAddress, "buy").then((r) => {
+          if (r.success && r.data && Array.isArray(r.data) && r.data.length > 0) {
+            return getProfilerPnlSummary(r.data[0].address, chain).then((p) =>
+              p.success ? p.data : null
+            );
+          }
+          return null;
+        })
+      ),
+      timed("dexscreener-bull", () => getDexScreenerToken(tokenAddress, chain).then((r) => (r.success ? r.data : null))),
+      timed("jupiter-price", () => getJupiterPrice(tokenAddress).then((r) => (r.success ? r.data : null))),
     ]);
+  log.info("bull fetchBullData complete", { durationMs: Date.now() - start });
 
   return { smNetflow, whoBought, flowIntelligence, profilerPnl, dexScreener, jupiterPrice };
 }

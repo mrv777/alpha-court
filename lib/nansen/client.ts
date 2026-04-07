@@ -9,9 +9,28 @@ const execAsync = promisify(exec);
 const TIMEOUT_MS = 45_000;
 const MAX_RETRIES = 1;
 const RETRY_DELAY_MS = 3_000;
+const MAX_CONCURRENT = 6; // Limit concurrent Nansen CLI calls to avoid rate limits
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// ── Concurrency semaphore ────────────────────────────────────────────
+
+let _running = 0;
+const _queue: Array<() => void> = [];
+
+async function withConcurrencyLimit<T>(fn: () => Promise<T>): Promise<T> {
+  if (_running >= MAX_CONCURRENT) {
+    await new Promise<void>((resolve) => _queue.push(resolve));
+  }
+  _running++;
+  try {
+    return await fn();
+  } finally {
+    _running--;
+    _queue.shift()?.();
+  }
 }
 
 /**
@@ -157,14 +176,18 @@ export async function nansenCliCall<T>(
     }
   }
 
-  // Execute with retry
+  // Execute with retry (concurrency-limited)
   let lastError: string | null = null;
   const startTime = Date.now();
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      log.info("nansen cli call", { command, attempt });
-      const raw = await execNansenCli(command);
+      const queuedAt = Date.now();
+      const raw = await withConcurrencyLimit(async () => {
+        const waitMs = Date.now() - queuedAt;
+        log.info("nansen cli exec", { command, attempt, waitMs, concurrent: _running });
+        return execNansenCli(command);
+      });
 
       if (!raw) {
         throw new Error("Empty CLI output");
@@ -177,7 +200,8 @@ export async function nansenCliCall<T>(
         setCache(cacheKey, command, params, parsed, chain, tokenAddress, ttlSeconds);
       }
 
-      log.info("nansen cli success", { command, durationMs: Date.now() - startTime, cached: false });
+      const durationMs = Date.now() - startTime;
+      log.info("nansen cli success", { command, durationMs, cached: false });
       return {
         success: true,
         data: parsed,
@@ -187,7 +211,8 @@ export async function nansenCliCall<T>(
       };
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
-      log.warn("nansen cli error", { command, attempt, error: lastError });
+      const durationMs = Date.now() - startTime;
+      log.warn("nansen cli error", { command, attempt, durationMs, error: lastError });
 
       // Wait before retry (except on last attempt)
       if (attempt < MAX_RETRIES) {
@@ -196,7 +221,8 @@ export async function nansenCliCall<T>(
     }
   }
 
-  log.error("nansen cli failed after retries", { command, error: lastError, durationMs: Date.now() - startTime });
+  const durationMs = Date.now() - startTime;
+  log.error("nansen cli failed after retries", { command, error: lastError, durationMs });
   return {
     success: false,
     data: null,

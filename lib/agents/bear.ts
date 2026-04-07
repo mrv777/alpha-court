@@ -6,12 +6,26 @@ import {
 } from "@/lib/nansen/endpoints";
 import { getDexScreenerToken } from "@/lib/data/dexscreener";
 import { checkTokenSecurity } from "@/lib/data/goplus";
+import { log } from "@/lib/logger";
 import type { BearData } from "./types";
 import { FAST } from "@/lib/llm";
 
 export { FAST as BEAR_MODEL };
 
 // ── Data fetching ──────────────────────────────────────────────────────
+
+/** Wrap a fetch call with timing log */
+async function timed<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  const start = Date.now();
+  try {
+    const result = await fn();
+    log.info(`bear endpoint done`, { endpoint: name, durationMs: Date.now() - start });
+    return result;
+  } catch (err) {
+    log.error(`bear endpoint error`, { endpoint: name, durationMs: Date.now() - start, error: err instanceof Error ? err.message : String(err) });
+    throw err;
+  }
+}
 
 /**
  * Fetch all data sources for the Bear agent concurrently.
@@ -21,15 +35,17 @@ export async function fetchBearData(
   tokenAddress: string,
   chain: string
 ): Promise<BearData> {
+  const start = Date.now();
   const [dexTrades, holders, smDexTrades, tokenFlows, dexScreener, security] =
     await Promise.all([
-      getTokenDexTrades(chain, tokenAddress).then((r) => (r.success ? r.data : null)),
-      getTokenHolders(chain, tokenAddress).then((r) => (r.success ? r.data : null)),
-      getSmDexTrades(chain, tokenAddress).then((r) => (r.success ? r.data : null)),
-      getTokenFlows(chain, tokenAddress, "whale").then((r) => (r.success ? r.data : null)),
-      getDexScreenerToken(tokenAddress, chain).then((r) => (r.success ? r.data : null)),
-      checkTokenSecurity(tokenAddress).then((r) => (r.success ? r.data : null)),
+      timed("token-dex-trades", () => getTokenDexTrades(chain, tokenAddress).then((r) => (r.success ? r.data : null))),
+      timed("token-holders", () => getTokenHolders(chain, tokenAddress).then((r) => (r.success ? r.data : null))),
+      timed("sm-dex-trades", () => getSmDexTrades(chain, tokenAddress).then((r) => (r.success ? r.data : null))),
+      timed("token-flows-whale", () => getTokenFlows(chain, tokenAddress, "whale").then((r) => (r.success ? r.data : null))),
+      timed("dexscreener-bear", () => getDexScreenerToken(tokenAddress, chain).then((r) => (r.success ? r.data : null))),
+      timed("goplus-security", () => checkTokenSecurity(tokenAddress).then((r) => (r.success ? r.data : null))),
     ]);
+  log.info("bear fetchBearData complete", { durationMs: Date.now() - start });
 
   return { dexTrades, holders, smDexTrades, tokenFlows, dexScreener, security };
 }

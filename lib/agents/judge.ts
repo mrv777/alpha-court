@@ -5,12 +5,26 @@ import {
   getWhoBoughtSold,
   getProfilerPnlSummary,
 } from "@/lib/nansen/endpoints";
+import { log } from "@/lib/logger";
 import type { JudgeData, VerdictScores } from "./types";
 import { REASONING } from "@/lib/llm";
 
 export { REASONING as JUDGE_MODEL };
 
 // ── Data fetching ──────────────────────────────────────────────────────
+
+/** Wrap a fetch call with timing log */
+async function timed<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  const start = Date.now();
+  try {
+    const result = await fn();
+    log.info(`judge endpoint done`, { endpoint: name, durationMs: Date.now() - start });
+    return result;
+  } catch (err) {
+    log.error(`judge endpoint error`, { endpoint: name, durationMs: Date.now() - start, error: err instanceof Error ? err.message : String(err) });
+    throw err;
+  }
+}
 
 /**
  * Fetch all data sources for the Judge agent concurrently.
@@ -20,20 +34,23 @@ export async function fetchJudgeData(
   tokenAddress: string,
   chain: string
 ): Promise<JudgeData> {
+  const start = Date.now();
   const [tokenInfo, ohlcv, whoSold, profilerPnl] = await Promise.all([
-    getTokenInfo(tokenAddress, chain).then((r) => (r.success ? r.data : null)),
-    getTokenOhlcv(tokenAddress, chain).then((r) => (r.success ? r.data : null)),
-    getWhoBoughtSold(chain, tokenAddress, "sell").then((r) => (r.success ? r.data : null)),
-    // Use a known top seller address if available, otherwise skip profiler
-    getWhoBoughtSold(chain, tokenAddress, "sell").then((r) => {
-      if (r.success && r.data && Array.isArray(r.data) && r.data.length > 0) {
-        return getProfilerPnlSummary(r.data[0].address, chain).then((p) =>
-          p.success ? p.data : null
-        );
-      }
-      return null;
-    }),
+    timed("token-info", () => getTokenInfo(tokenAddress, chain).then((r) => (r.success ? r.data : null))),
+    timed("token-ohlcv", () => getTokenOhlcv(tokenAddress, chain).then((r) => (r.success ? r.data : null))),
+    timed("who-bought-sold-sell", () => getWhoBoughtSold(chain, tokenAddress, "sell").then((r) => (r.success ? r.data : null))),
+    timed("profiler-pnl-sellers", () =>
+      getWhoBoughtSold(chain, tokenAddress, "sell").then((r) => {
+        if (r.success && r.data && Array.isArray(r.data) && r.data.length > 0) {
+          return getProfilerPnlSummary(r.data[0].address, chain).then((p) =>
+            p.success ? p.data : null
+          );
+        }
+        return null;
+      })
+    ),
   ]);
+  log.info("judge fetchJudgeData complete", { durationMs: Date.now() - start });
 
   return { tokenInfo, ohlcv, whoSold, profilerPnl };
 }

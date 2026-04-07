@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, Database, Activity, AlertCircle, Radio } from "lucide-react";
+import { RefreshCw, Database, Activity, AlertCircle, Radio, FileText } from "lucide-react";
 
 interface DebugData {
   timestamp: number;
@@ -30,6 +30,10 @@ interface DebugData {
     error: string | null;
     createdAt: number;
   }>;
+  logs: {
+    sizeBytes: number;
+    lines: string[];
+  };
 }
 
 function StatCard({
@@ -60,6 +64,8 @@ export function DebugClient() {
   const [data, setData] = useState<DebugData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [logFilter, setLogFilter] = useState<"all" | "info" | "warn" | "error">("all");
+  const [logSearch, setLogSearch] = useState("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -269,6 +275,95 @@ export function DebugClient() {
                 </div>
               ) : (
                 <p className="text-xs text-court-text-dim">No recent errors</p>
+              )}
+            </section>
+
+            {/* Server Logs */}
+            <section className="mb-8">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-court-text-muted">
+                    Server Logs
+                  </h2>
+                  <span className="text-xs text-court-text-dim font-mono">
+                    {data.logs.sizeBytes > 0
+                      ? `${(data.logs.sizeBytes / 1024).toFixed(1)} KB`
+                      : "empty"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={logSearch}
+                    onChange={(e) => setLogSearch(e.target.value)}
+                    placeholder="Search logs..."
+                    className="rounded-md border border-court-border bg-court-bg px-2 py-1 text-xs text-court-text font-mono placeholder:text-court-text-dim focus:outline-none focus:border-judge/50 w-40"
+                  />
+                  {(["all", "info", "warn", "error"] as const).map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setLogFilter(level)}
+                      className={`rounded px-2 py-0.5 text-xs font-mono transition-colors ${
+                        logFilter === level
+                          ? level === "error"
+                            ? "bg-bear/20 text-bear"
+                            : level === "warn"
+                              ? "bg-yellow-500/20 text-yellow-400"
+                              : level === "info"
+                                ? "bg-bull/20 text-bull"
+                                : "bg-court-border text-court-text"
+                          : "text-court-text-dim hover:text-court-text-muted"
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {data.logs.lines.length > 0 ? (
+                <div className="rounded-lg border border-court-border bg-court-surface overflow-hidden">
+                  <div className="max-h-96 overflow-y-auto p-3 space-y-0.5">
+                    {data.logs.lines
+                      .filter((line) => {
+                        if (logFilter !== "all") {
+                          const levelMatch = line.match(/\[(INFO|WARN|ERROR|DEBUG)]/);
+                          if (!levelMatch) return false;
+                          if (logFilter !== levelMatch[1].toLowerCase()) return false;
+                        }
+                        if (logSearch) {
+                          return line.toLowerCase().includes(logSearch.toLowerCase());
+                        }
+                        return true;
+                      })
+                      .slice(-100)
+                      .map((line, i) => {
+                        const isError = line.includes("[ERROR]");
+                        const isWarn = line.includes("[WARN]");
+                        const isDebug = line.includes("[DEBUG]");
+                        return (
+                          <div
+                            key={i}
+                            className={`text-xs font-mono break-all leading-relaxed ${
+                              isError
+                                ? "text-bear"
+                                : isWarn
+                                  ? "text-yellow-400"
+                                  : isDebug
+                                    ? "text-court-text-dim"
+                                    : "text-court-text-muted"
+                            }`}
+                          >
+                            {line}
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs text-court-text-dim">
+                  <FileText className="size-3.5" />
+                  <span>No log entries yet</span>
+                </div>
               )}
             </section>
           </>

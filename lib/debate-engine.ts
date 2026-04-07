@@ -303,52 +303,58 @@ export async function runDebate(
       emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "pending" });
     }
 
-    // Fetch Bull data (all concurrent within group)
+    // Fetch Bull + Bear in parallel, then Judge (safer for rate limits than all 3)
     const gatherStart = Date.now();
+
+    // Bull + Bear concurrently (max ~12 Nansen calls, capped by semaphore to 6 at a time)
+    const [bullResult, bearResult] = await Promise.allSettled([
+      fetchBullData(tokenAddress, chain),
+      fetchBearData(tokenAddress, chain),
+    ]);
+
     let bullData: BullData;
-    try {
-      bullData = await fetchBullData(tokenAddress, chain);
+    if (bullResult.status === "fulfilled") {
+      bullData = bullResult.value;
       for (const ep of BULL_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "complete" });
       }
-      log.info("bull data fetched", { trialId });
-    } catch (err) {
+      log.info("bull data fetched", { trialId, durationMs: Date.now() - gatherStart });
+    } else {
       for (const ep of BULL_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "error" });
       }
-      log.error("bull data fetch failed", { trialId, error: err instanceof Error ? err.message : String(err) });
+      log.error("bull data fetch failed", { trialId, durationMs: Date.now() - gatherStart, error: bullResult.reason instanceof Error ? bullResult.reason.message : String(bullResult.reason) });
       bullData = { smNetflow: null, whoBought: null, flowIntelligence: null, profilerPnl: null, dexScreener: null, jupiterPrice: null };
     }
 
-    // Fetch Bear data
     let bearData: BearData;
-    try {
-      bearData = await fetchBearData(tokenAddress, chain);
+    if (bearResult.status === "fulfilled") {
+      bearData = bearResult.value;
       for (const ep of BEAR_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "complete" });
       }
-      log.info("bear data fetched", { trialId });
-    } catch (err) {
+      log.info("bear data fetched", { trialId, durationMs: Date.now() - gatherStart });
+    } else {
       for (const ep of BEAR_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "error" });
       }
-      log.error("bear data fetch failed", { trialId, error: err instanceof Error ? err.message : String(err) });
+      log.error("bear data fetch failed", { trialId, durationMs: Date.now() - gatherStart, error: bearResult.reason instanceof Error ? bearResult.reason.message : String(bearResult.reason) });
       bearData = { dexTrades: null, holders: null, smDexTrades: null, tokenFlows: null, dexScreener: null, security: null };
     }
 
-    // Fetch Judge data
+    // Judge fetches after Bull+Bear (judge data not needed until cross-exam)
     let judgeData: JudgeData;
     try {
       judgeData = await fetchJudgeData(tokenAddress, chain);
       for (const ep of JUDGE_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "complete" });
       }
-      log.info("judge data fetched", { trialId });
+      log.info("judge data fetched", { trialId, durationMs: Date.now() - gatherStart });
     } catch (err) {
       for (const ep of JUDGE_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "error" });
       }
-      log.error("judge data fetch failed", { trialId, error: err instanceof Error ? err.message : String(err) });
+      log.error("judge data fetch failed", { trialId, durationMs: Date.now() - gatherStart, error: err instanceof Error ? err.message : String(err) });
       judgeData = { tokenInfo: null, ohlcv: null, whoSold: null, profilerPnl: null };
     }
 

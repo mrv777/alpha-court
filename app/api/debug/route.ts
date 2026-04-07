@@ -1,6 +1,8 @@
 import { getDb } from "@/lib/db";
 import { getCacheStats, pruneExpiredCache } from "@/lib/cache";
 import { activeDebates } from "@/lib/debate-engine";
+import fs from "fs";
+import path from "path";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +84,29 @@ export async function GET() {
   // Prune expired cache entries (housekeeping)
   const pruned = pruneExpiredCache();
 
+  // Read recent log entries
+  const logDir = process.env.LOG_PATH || path.join(process.cwd(), "data", "logs");
+  const logFile = path.join(logDir, "app.log");
+  let logLines: string[] = [];
+  let logSizeBytes = 0;
+  try {
+    const stat = fs.statSync(logFile);
+    logSizeBytes = stat.size;
+    // Read last 32KB to get recent entries without loading entire file
+    const readSize = Math.min(stat.size, 32 * 1024);
+    const fd = fs.openSync(logFile, "r");
+    const buf = Buffer.alloc(readSize);
+    fs.readSync(fd, buf, 0, readSize, Math.max(0, stat.size - readSize));
+    fs.closeSync(fd);
+    const raw = buf.toString("utf-8");
+    const allLines = raw.split("\n").filter(Boolean);
+    // If we read from middle of file, drop the first (possibly partial) line
+    if (stat.size > readSize) allLines.shift();
+    logLines = allLines.slice(-200);
+  } catch {
+    // No log file yet
+  }
+
   return Response.json({
     timestamp: Math.floor(Date.now() / 1000),
     trials: {
@@ -106,5 +131,9 @@ export async function GET() {
       error: e.error_message,
       createdAt: e.created_at,
     })),
+    logs: {
+      sizeBytes: logSizeBytes,
+      lines: logLines,
+    },
   });
 }

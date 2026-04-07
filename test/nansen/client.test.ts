@@ -235,4 +235,37 @@ describe("nansenCliCall", () => {
       expect.any(Function)
     );
   });
+
+  it("limits concurrent CLI calls to 6", async () => {
+    let concurrentCount = 0;
+    let maxConcurrent = 0;
+
+    mockExec.mockImplementation(
+      (_cmd: string, _opts: unknown, callback: (err: null, result: { stdout: string; stderr: string }) => void) => {
+        concurrentCount++;
+        maxConcurrent = Math.max(maxConcurrent, concurrentCount);
+
+        // Simulate async work
+        setTimeout(() => {
+          concurrentCount--;
+          callback(null, { stdout: '{"success": true, "data": {"ok": true}}', stderr: "" });
+        }, 50);
+      }
+    );
+
+    // Fire 10 concurrent calls
+    const promises = Array.from({ length: 10 }, (_, i) =>
+      nansenCliCall(`cmd-${i}`, { skipCache: true, params: { i } })
+    );
+
+    await Promise.all(promises);
+
+    // All should succeed
+    for (const result of await Promise.all(promises)) {
+      expect(result.success).toBe(true);
+    }
+
+    // Max concurrent should be capped at 6
+    expect(maxConcurrent).toBeLessThanOrEqual(6);
+  });
 });
