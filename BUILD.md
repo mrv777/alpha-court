@@ -396,22 +396,22 @@ After completing, run: pnpm typecheck && pnpm test && pnpm dev (visually verify 
 
 ---
 
-## Phase 4: Gemini Integration & Agent System
+## Phase 4: Grok/xAI Integration & Agent System
 
 ### Goals
-- @google/genai SDK wrapper with streaming, structured output, Google Search grounding
+- Vercel AI SDK + xAI provider wrapper with streaming, structured output, X search + web search
 - Bull/Bear/Judge agent modules with prompts and data fetching
 - Citation syntax parser
 - Full test coverage
 
 ### Tasks
-1. Install `@google/genai` package
-2. Create `lib/gemini.ts` — SDK wrapper:
-   - Initialize client with `GEMINI_API_KEY`
-   - `streamChat(model, systemPrompt, userPrompt, options)` — returns async iterable of text chunks
-   - `structuredOutput(model, systemPrompt, userPrompt, schema)` — returns parsed JSON
-   - Model constants: `FLASH_LITE = 'gemini-3.1-flash-lite-preview'`, `PRO = 'gemini-3.1-pro-preview'`
-   - Grounding config for Judge (Google Search)
+1. Install `ai` and `@ai-sdk/xai` packages
+2. Create `lib/llm.ts` — SDK wrapper:
+   - Initialize xAI provider with `XAI_API_KEY`
+   - `streamChat(model, systemPrompt, userPrompt, options)` — returns async iterable of text chunks via `streamText()`
+   - `structuredOutput(model, systemPrompt, userPrompt, schema)` — returns parsed JSON via `generateObject()`
+   - Model constants: `FAST = 'grok-4-1-fast-non-reasoning'`, `REASONING = 'grok-4-1-fast-reasoning'`
+   - X search + web search tool config for Judge (via `xai.tools.xSearch()` and `xai.tools.webSearch()`)
    - Soft timeout: monitor streamed word count, stop if >2x target
    - Error handling: wrap API errors in consistent format
 3. Create `lib/citations.ts` — citation parser:
@@ -429,18 +429,18 @@ After completing, run: pnpm typecheck && pnpm test && pnpm dev (visually verify 
    - `fetchBullData(tokenAddress, chain)` — calls 4 Nansen endpoints + DexScreener + Jupiter concurrently
    - `buildBullOpeningPrompt(data, tokenName)` — system prompt + user prompt with data injection + citation instructions
    - `buildBullRebuttalPrompt(data, bearOpening)` — rebuttal prompt referencing Bear's argument
-   - Model: Flash Lite, word targets: opening 200-300, rebuttal 150-200
+   - Model: FAST (grok-4-1-fast-non-reasoning), word targets: opening 200-300, rebuttal 150-200
 6. Create `lib/agents/bear.ts`:
    - `fetchBearData(tokenAddress, chain)` — calls 4 Nansen endpoints + DexScreener + GoPlus concurrently
    - `buildBearOpeningPrompt(data, tokenName)` — with risk-focused analytical framework
    - `buildBearRebuttalPrompt(data, bullOpening)` — rebuttal prompt
-   - Model: Flash Lite
+   - Model: FAST (grok-4-1-fast-non-reasoning)
 7. Create `lib/agents/judge.ts`:
    - `fetchJudgeData(tokenAddress, chain)` — calls 4 Nansen endpoints concurrently
    - `buildJudgeCrossExamPrompt(data, bullOpening, bearOpening, bullRebuttal, bearRebuttal)` — cross-examination prompt
    - `buildJudgeVerdictPrompt(data, fullTranscript)` — verdict prompt (streamed text)
    - `buildJudgeVerdictStructuredPrompt(verdictText)` — extract structured scores from verdict text
-   - Model: Pro with Google Search grounding
+   - Model: REASONING (grok-4-1-fast-reasoning) with x_search + web_search tools
    - Verdict schema: `{ score: number, label: string, summary: string, bull_conviction: number, bear_conviction: number }`
 
 ### UX Considerations
@@ -450,16 +450,16 @@ After completing, run: pnpm typecheck && pnpm test && pnpm dev (visually verify 
 - Soft timeout should cut gracefully (let the current sentence finish if possible)
 
 ### Edge Cases
-- Gemini API returns 429 (rate limited) → retry once after 2s delay
-- Gemini API returns 500 → retry once, then return error
-- Gemini stream stalls (no chunks for >15s) → timeout and close
+- xAI API returns 429 (rate limited) → retry once after 2s delay
+- xAI API returns 500 → retry once, then return error
+- LLM stream stalls (no chunks for >15s) → timeout and close
 - Citation syntax appears in middle of a word → still parse correctly
 - Nested brackets in citation value (e.g., `[[cite:x|value (with parens)]]`) → handle
 - Agent receives empty data bundle → prompt includes "No data available for X" context
 - Structured output returns invalid JSON → retry once, then use fallback parsing
-- Grounding search returns no results → Judge proceeds without web context
+- x_search returns no results for niche tokens → Judge proceeds with web_search and on-chain data only
 
-### Tests (`test/citations.test.ts`, `test/agents/*.test.ts`, `test/gemini.test.ts`)
+### Tests (`test/citations.test.ts`, `test/agents/*.test.ts`, `test/llm.test.ts`)
 - Citations: parse single citation from text
 - Citations: parse multiple citations from text
 - Citations: handle malformed citation (missing closing brackets) → render as text
@@ -475,44 +475,44 @@ After completing, run: pnpm typecheck && pnpm test && pnpm dev (visually verify 
 - Judge: `fetchJudgeData` calls correct 4 data sources
 - Judge: cross-exam prompt includes full transcript from all phases
 - Judge: verdict structured schema matches expected format
-- Gemini: soft timeout triggers at 2x word target
-- Gemini: error wrapping produces consistent error format
+- LLM: soft timeout triggers at 2x word target
+- LLM: error wrapping produces consistent error format
 - Agent prompts: include citation syntax instructions
 - Agent prompts: include word count targets
 - Agent prompts: handle missing data gracefully in prompt text
 
 ### Re-evaluation Checkpoint
-- Do the Gemini 3.1 models actually exist and work? Test with a real API call.
-- Is Google Search grounding available for gemini-3.1-pro-preview? Check SDK docs.
+- Do the Grok 4.1 Fast models work well for structured debate arguments? Test with a real API call.
+- Does x_search return useful results for crypto tokens? Test with popular tokens.
 - Are the prompts producing good-quality arguments? May need iteration.
-- Is the citation syntax reliable with Flash Lite, or does it need more prompt engineering?
+- Is the citation syntax reliable with grok-4-1-fast, or does it need more prompt engineering?
 - Is the soft timeout working well, or does it cut too abruptly?
 
 ### Session Prompt
 
 ```
-Read @SPEC.md for full project context. Read @BUILD.md for the phased plan. This is Phase 4 — Gemini Integration & Agent System.
+Read @SPEC.md for full project context. Read @BUILD.md for the phased plan. This is Phase 4 — Grok/xAI Integration & Agent System.
 
 Phases 1-3 are complete: we have a Next.js 15 app with custom dark theme, SQLite DB, Nansen CLI wrapper + DexScreener/Jupiter/GoPlus clients (all with SQLite caching), landing page with token search autocomplete, trial creation API with cooldown, recent trials grid. All with tests.
 
 PHASE 4 GOALS:
-- @google/genai SDK wrapper (streaming, structured output, Google Search grounding)
+- Vercel AI SDK + xAI provider wrapper (streaming, structured output, X search + web search)
 - Bull/Bear/Judge agent modules with data fetching + prompt construction
 - Citation syntax parser for [[cite:endpoint|value]] format
 - Full test coverage
 
-INSTALL: @google/genai
+INSTALL: ai @ai-sdk/xai
 
-CREATE lib/gemini.ts:
-- Init client with GEMINI_API_KEY env var
-- streamChat(model, systemPrompt, userPrompt, options) → async iterable of text chunks
-- structuredOutput(model, systemPrompt, userPrompt, schema) → parsed JSON
-- Model constants: FLASH_LITE = 'gemini-3.1-flash-lite-preview', PRO = 'gemini-3.1-pro-preview'
-- Google Search grounding config for Judge
+CREATE lib/llm.ts:
+- Init xAI provider with XAI_API_KEY env var
+- streamChat(model, systemPrompt, userPrompt, options) → async iterable of text chunks via streamText()
+- structuredOutput(model, systemPrompt, userPrompt, schema) → parsed JSON via generateObject()
+- Model constants: FAST = 'grok-4-1-fast-non-reasoning', REASONING = 'grok-4-1-fast-reasoning'
+- X search + web search tool config for Judge (xai.tools.xSearch(), xai.tools.webSearch() on Responses API)
 - Soft timeout: track streamed word count, stop stream if >2x target words
 - Consistent error wrapping
 
-CHECK: Before implementing, verify the exact @google/genai SDK API for streaming, structured output, and grounding. Use context7 MCP to fetch current docs if needed. The SDK API may differ from what we expect.
+CHECK: Before implementing, verify the exact @ai-sdk/xai SDK API for streaming, structured output, and x_search/web_search tools. Use context7 MCP to fetch current Vercel AI SDK docs if needed. The xAI provider uses the Responses API for search tools (NOT Chat Completions).
 
 CREATE lib/citations.ts:
 - parseCitations(text) → { cleanText, citations: [{ endpoint, displayValue, startIndex, endIndex }] }
@@ -525,36 +525,37 @@ CREATE lib/agents/bull.ts:
 - fetchBullData(tokenAddress, chain) — calls concurrently: getSmNetflow, getWhoBoughtSold(buy), getTokenFlowIntelligence, getProfilerPnlSummary + getDexScreenerToken + getJupiterPrice
 - buildBullOpeningPrompt(data, tokenName) — confident/data-driven persona, cite with [[cite:x|y]], target 200-300 words
 - buildBullRebuttalPrompt(data, bearOpening) — focused counter-argument, target 150-200 words
-- Model: FLASH_LITE
+- Model: FAST (grok-4-1-fast-non-reasoning)
 
 CREATE lib/agents/bear.ts:
 - fetchBearData(tokenAddress, chain) — calls concurrently: getTokenDexTrades, getTokenHolders, getSmDexTrades, getTokenFlows(whale) + getDexScreenerToken + checkTokenSecurity
 - buildBearOpeningPrompt(data, tokenName) — skeptical/forensic persona, risk-focused framework
 - buildBearRebuttalPrompt(data, bullOpening) — counter Bull's points
-- Model: FLASH_LITE
+- Model: FAST (grok-4-1-fast-non-reasoning)
 
 CREATE lib/agents/judge.ts:
 - fetchJudgeData(tokenAddress, chain) — calls concurrently: getTokenInfo, getTokenOhlcv, getWhoBoughtSold(sell), getProfilerPnlSummary
 - buildJudgeCrossExamPrompt(data, bullOpening, bearOpening, bullRebuttal, bearRebuttal)
 - buildJudgeVerdictPrompt(data, fullTranscript) — streams verdict text
 - Structured output call after streaming to extract: { score: -100..100, label, summary, bull_conviction: 0-100, bear_conviction: 0-100 }
-- Model: PRO with Google Search grounding
+- Model: REASONING (grok-4-1-fast-reasoning) with x_search + web_search tools
 
 PROMPT DESIGN (middle ground — clear persona + analytical framework, no forced catchphrases):
 - Each prompt includes: role definition, analytical framework, citation instructions ([[cite:endpoint|value]]), word target, actual data, missing data handling
 - Citation instruction: "Only cite data you have been provided. Never fabricate citations."
 
 EDGE CASES:
-- Gemini 429/500 → retry once after 2s
+- xAI 429/500 → retry once after 2s
 - Stream stalls (no chunks >15s) → timeout
 - Nested brackets in citation values → handle
 - Empty data bundle → prompt says "No data available for X"
 - Structured output invalid JSON → retry once, fallback parsing
+- x_search returns empty for niche tokens → Judge uses web_search + on-chain data only
 
-TESTS (mock Gemini API, don't make real calls):
+TESTS (mock xAI API, don't make real calls):
 - Citations: single/multiple/malformed/partial streaming/special chars/empty
 - Each agent: data fetching calls correct sources, prompts include all required sections
-- Gemini wrapper: soft timeout, error wrapping, consistent format
+- LLM wrapper: soft timeout, error wrapping, consistent format
 - All prompts include citation instructions and word targets
 
 After completing, run: pnpm typecheck && pnpm test
@@ -580,7 +581,7 @@ After completing, run: pnpm typecheck && pnpm test
    - Phase 3 (rebuttal): sequential — Bear rebuts Bull, then Bull rebuts Bear. Stream each, persist.
    - Phase 4 (cross_exam): Judge reads full transcript + own data. Stream cross-examination.
    - Phase 5 (verdict): Judge streams verdict text, then structured output call for scores. Emit `verdict` event. Update trial with scores.
-   - Retry logic: on Gemini failure, retry once, then skip that agent's message
+   - Retry logic: on LLM failure, retry once, then skip that agent's message
    - Server-side completion: runs to completion regardless of client disconnection
    - Persist each message to debate_messages as it completes (not batch at end)
    - Update trial status at each phase transition
@@ -614,7 +615,7 @@ After completing, run: pnpm typecheck && pnpm test
 - Client connects after trial errored → return stored messages + error event
 - Client connects mid-Phase 3 → get Phase 1-2 from DB, join Phase 3 live stream
 - Debate engine throws unhandled exception → catch at top level, set trial error status
-- Gemini streams partial message then errors → store what we have, mark as incomplete
+- LLM streams partial message then errors → store what we have, mark as incomplete
 - SSE connection drops during verdict structured output call → verdict still persists to DB
 - Trial ID doesn't exist → return 404
 - Trial is already pending (another client started it) → join the existing debate stream
@@ -628,7 +629,7 @@ After completing, run: pnpm typecheck && pnpm test
 - Engine: Phase 5 streams verdict + extracts structured scores
 - Engine: persists each message to debate_messages table
 - Engine: updates trial status at each phase transition
-- Engine: retry on Gemini failure, then skip
+- Engine: retry on LLM failure, then skip
 - Engine: sets trial error status on unrecoverable failure
 - Engine: continues after client disconnect
 - SSE route: returns 404 for non-existent trial
@@ -642,7 +643,7 @@ After completing, run: pnpm typecheck && pnpm test
 - Hook: handles completed trial (instant load)
 
 ### Re-evaluation Checkpoint
-- Is the debate pacing right? May need to adjust Gemini parameters (temperature, max tokens).
+- Is the debate pacing right? May need to adjust LLM parameters (temperature, max tokens).
 - Does simultaneous streaming (Phase 2) look good, or is interleaved text confusing?
 - Is the SSE reconnection working smoothly? Test by killing/restarting the dev server mid-debate.
 - Are the debate messages being persisted correctly? Check DB after a full trial run.
@@ -653,7 +654,7 @@ After completing, run: pnpm typecheck && pnpm test
 ```
 Read @SPEC.md for full project context. Read @BUILD.md for the phased plan. This is Phase 5 — Debate Engine & SSE Streaming.
 
-Phases 1-4 are complete: we have the full data layer (Nansen CLI + DexScreener/Jupiter/GoPlus with caching), Gemini SDK wrapper (streaming + structured output + grounding), citation parser, and all three agent modules (Bull/Bear/Judge with data fetching + prompt construction). Landing page with token search and trial creation works. All with tests.
+Phases 1-4 are complete: we have the full data layer (Nansen CLI + DexScreener/Jupiter/GoPlus with caching), LLM wrapper via Vercel AI SDK + xAI provider (streaming + structured output + x_search/web_search), citation parser, and all three agent modules (Bull/Bear/Judge with data fetching + prompt construction). Landing page with token search and trial creation works. All with tests.
 
 PHASE 5 GOALS:
 - Debate engine orchestrator (5-phase sequential logic, runs server-side to completion)
@@ -664,11 +665,11 @@ PHASE 5 GOALS:
 CREATE lib/debate-engine.ts — the core orchestrator:
 - runDebate(trialId, tokenAddress, chain, tokenName, emitEvent: (event) => void)
 - Phase 1 (gathering): fetch data grouped by agent (Bull group concurrent, then Bear group, then Judge group). Emit data_progress events per endpoint. Set trial status=gathering.
-- Phase 2 (opening): stream Bull + Bear openings SIMULTANEOUSLY (two parallel Gemini streams). Emit chunk events interleaved. On complete, emit message_complete per agent. Persist each to debate_messages table. Set trial status=debating.
+- Phase 2 (opening): stream Bull + Bear openings SIMULTANEOUSLY (two parallel LLM streams). Emit chunk events interleaved. On complete, emit message_complete per agent. Persist each to debate_messages table. Set trial status=debating.
 - Phase 3 (rebuttal): SEQUENTIAL — Bear rebuts Bull's opening, then Bull rebuts Bear's opening. Stream + persist each.
-- Phase 4 (cross_exam): Judge reads full transcript + own data + Google Search grounding. Stream.
+- Phase 4 (cross_exam): Judge reads full transcript + own data + x_search/web_search. Stream.
 - Phase 5 (verdict): Judge streams verdict text, then SEPARATE structured output call for scores { score, label, summary, bull_conviction, bear_conviction }. Emit verdict event. Update trial row with all verdict fields. Set status=completed.
-- On Gemini failure: retry once, then skip that message and continue debate
+- On LLM failure: retry once, then skip that message and continue debate
 - On unrecoverable error: set trial status=error, error_message
 - Persist EACH message to debate_messages as it completes (not batch)
 - Runs to completion regardless of client disconnection
@@ -695,7 +696,7 @@ EDGE CASES:
 - Client connects after error → return stored messages + error
 - Mid-trial join → DB replay + live join
 - Unhandled engine exception → catch, set error status
-- Partial Gemini stream + error → store partial, mark incomplete
+- Partial LLM stream + error → store partial, mark incomplete
 - Trial doesn't exist → 404
 - Trial already started by another client → join existing
 
@@ -708,7 +709,7 @@ SSE EVENT TYPES (from SPEC.md):
 - error: { message, recoverable }
 - done: {}
 
-TESTS (mock Gemini calls, use real DB):
+TESTS (mock LLM calls, use real DB):
 - Engine: 5 phases execute in order
 - Engine: Phase 1 groups by agent, Phase 2 parallel, Phase 3 sequential
 - Engine: persists messages per phase, updates trial status
@@ -827,7 +828,7 @@ Then manually test: create a trial via the landing page and watch the SSE stream
 ```
 Read @SPEC.md for full project context. Read @BUILD.md for the phased plan. This is Phase 6 — Trial Page UI.
 
-Phases 1-5 are complete: full data layer, Gemini integration with all 3 agents, debate engine (5-phase orchestrator with server-side completion), SSE streaming API, useDebateStream hook. Landing page and trial creation work. All with tests.
+Phases 1-5 are complete: full data layer, Grok/xAI integration with all 3 agents, debate engine (5-phase orchestrator with server-side completion), SSE streaming API, useDebateStream hook. Landing page and trial creation work. All with tests.
 
 PHASE 6 GOALS:
 - Three-column courtroom layout (desktop)
@@ -1067,7 +1068,7 @@ Then: run a full trial, verify verdict animation, test the share button, check /
    - Verdict page skeleton
    - Landing page skeleton (for recent trials loading)
 3. Verify and fix word length soft timeout:
-   - Test with verbose Gemini responses
+   - Test with verbose LLM responses
    - Ensure the stream stops cleanly without mid-word/mid-sentence cuts
    - Verify the timeout respects the 2x target limit
 4. Verify and fix mid-trial join:
@@ -1077,7 +1078,7 @@ Then: run a full trial, verify verdict animation, test the share button, check /
 5. Create `app/debug/page.tsx` — debug dashboard:
    - Protected by `DEBUG_ENABLED=true` env var
    - Cache stats: total entries, hit/miss ratio, oldest entry, cache size by endpoint
-   - API timings: average Nansen CLI call duration per endpoint, Gemini call durations
+   - API timings: average Nansen CLI call duration per endpoint, LLM call durations
    - Trial stats: total, completed, errored, average duration
    - Recent errors: last 10 error messages from trials
    - Active debates: currently running trials
@@ -1154,7 +1155,7 @@ TASKS:
 2. Loading skeletons matching actual layouts for trial page, verdict page, recent trials
 3. Verify soft timeout: test with verbose responses, check 2x limit, clean stop without mid-word cut
 4. Verify mid-trial join: navigate away + back, share URL during debate, refresh during verdict
-5. Create app/debug/page.tsx (DEBUG_ENABLED=true): cache stats (entries, hit/miss, by endpoint), API timings (Nansen + Gemini averages), trial stats (total, completed, errored, avg duration), recent errors, active debates
+5. Create app/debug/page.tsx (DEBUG_ENABLED=true): cache stats (entries, hit/miss, by endpoint), API timings (Nansen + LLM averages), trial stats (total, completed, errored, avg duration), recent errors, active debates
 6. Create app/api/debug/route.ts
 7. Mobile polish: test 375px + 768px, fix overflow/truncation, touch targets ≥44px, citation tap-to-expand, verdict animations on mobile
 8. Create scripts/precache.ts: list 3-5 popular Solana tokens, run all data fetches, cache with 24h TTL, optionally run full trials to populate recent grid
@@ -1337,7 +1338,7 @@ After completing: docker build, docker-compose up, verify all features, run prec
 | 1 | Foundation | Next.js + theme + SQLite + Vitest | 2-3h |
 | 2 | Data Layer | Nansen CLI + DexScreener/Jupiter/GoPlus + caching | 3-4h |
 | 3 | Landing Page | Token search + trial creation + cooldown | 3-4h |
-| 4 | AI System | Gemini SDK + agents + citations | 3-4h |
+| 4 | AI System | Grok/xAI SDK + agents + citations | 3-4h |
 | 5 | Debate Engine | 5-phase orchestrator + SSE + hook | 3-4h |
 | 6 | Trial Page UI | Courtroom layout + streaming + mobile | 4-5h |
 | 7 | Verdict & Sharing | Animations + OG images + verdict page | 3-4h |
@@ -1355,7 +1356,7 @@ After each phase:
 5. **Priority shift?** — Anything we should move earlier/later?
 
 Things that commonly need adjustment:
-- Gemini model names (may change or not be available)
+- xAI/Grok model names or API behavior (may change)
 - Nansen CLI command syntax (may differ from expected)
 - Agent prompt quality (usually needs 2-3 iterations)
 - Animation timing (feels different in practice vs spec)

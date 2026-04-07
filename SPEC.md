@@ -23,9 +23,9 @@ Alpha Court is a web app where three AI agents — The Bull, The Bear, and The J
 |-------|-----------|
 | Framework | Next.js 15 (App Router), TypeScript, React 19 |
 | Styling | Tailwind CSS v4, shadcn/ui, custom dark courtroom theme |
-| AI | Gemini 3.1 Flash Lite (`gemini-3.1-flash-lite-preview`) for Bull/Bear, Gemini 3.1 Pro (`gemini-3.1-pro-preview`) for Judge |
-| AI SDK | `@google/genai` (Google GenAI SDK) |
-| AI Features | Judge uses Google Search grounding for cross-referencing claims against public news/sentiment |
+| AI | Grok 4.1 Fast Non-Reasoning (`grok-4-1-fast-non-reasoning`) for Bull/Bear, Grok 4.1 Fast Reasoning (`grok-4-1-fast-reasoning`) for Judge |
+| AI SDK | Vercel AI SDK (`ai` + `@ai-sdk/xai`) |
+| AI Features | Judge uses X/Twitter search (`x_search`) + web search (`web_search`) via xAI Responses API for cross-referencing claims against real-time social sentiment and public news |
 | Primary Data | Nansen CLI (shell exec with caching + retry logic, ported from nansen-ai3) |
 | Supplementary Data | DexScreener (DEX price/volume/liquidity, free, no auth), Jupiter Price API (real-time prices), GoPlus Security API (token safety checks) |
 | Database | SQLite via better-sqlite3 (WAL mode, caching + trial persistence) |
@@ -40,7 +40,7 @@ Alpha Court is a web app where three AI agents — The Bull, The Bear, and The J
 
 **Role:** Argues FOR buying the token. Finds bullish signals.
 **Personality:** Confident, data-driven, urgent. Cites specific numbers. Acknowledges risks only to dismiss them.
-**Model:** Gemini 3.1 Flash Lite (`gemini-3.1-flash-lite-preview`) — 1/8 the price of Flash, sufficient for argument generation.
+**Model:** Grok 4.1 Fast Non-Reasoning (`grok-4-1-fast-non-reasoning`) — $0.20/$0.50 per 1M tokens, fast streaming, 2M context.
 
 **Nansen data sources:**
 1. `smart-money netflow` — SM net capital flow direction
@@ -56,7 +56,7 @@ Alpha Court is a web app where three AI agents — The Bull, The Bear, and The J
 
 **Role:** Argues AGAINST buying. Hunts for risks and red flags.
 **Personality:** Skeptical, forensic, protective. Highlights concentration risk, exits, declining metrics.
-**Model:** Gemini 3.1 Flash Lite (`gemini-3.1-flash-lite-preview`)
+**Model:** Grok 4.1 Fast Non-Reasoning (`grok-4-1-fast-non-reasoning`)
 
 **Nansen data sources:**
 5. `token dex-trades` — DEX sell pressure and volume
@@ -72,8 +72,8 @@ Alpha Court is a web app where three AI agents — The Bull, The Bear, and The J
 
 **Role:** Impartial arbiter. Cross-examines both sides with independent data. Renders verdict.
 **Personality:** Measured, authoritative, fair. Evaluates evidence quality, not just quantity.
-**Model:** Gemini 3.1 Pro (`gemini-3.1-pro-preview`) — higher reasoning capability for cross-examination and verdict.
-**Google Search Grounding:** Enabled. Cross-references claims against public news, sentiment, and recent events.
+**Model:** Grok 4.1 Fast Reasoning (`grok-4-1-fast-reasoning`) — reasoning capability for cross-examination and verdict, same low price as non-reasoning.
+**X Search + Web Search:** Enabled via xAI Responses API. Cross-references claims against real-time X/Twitter sentiment, public news, and recent events. Can filter by crypto-relevant handles and date ranges.
 
 **Nansen data sources:**
 9. `token info` — token metadata (market cap, supply, age)
@@ -136,7 +136,7 @@ All three agents fetch their data **grouped by agent** — each agent's 4 Nansen
 
 ### Phase 2: Opening Statements (~15-20s)
 
-Bull and Bear present their cases **simultaneously** via two parallel Gemini streams. The UI renders both panels streaming at once in the center courtroom panel. Each targets ~200-300 words, citing specific data points using inline citation syntax.
+Bull and Bear present their cases **simultaneously** via two parallel LLM streams. The UI renders both panels streaming at once in the center courtroom panel. Each targets ~200-300 words, citing specific data points using inline citation syntax.
 
 ### Phase 3: Rebuttals (~15-20s)
 
@@ -144,11 +144,11 @@ Sequential: Bear rebuts Bull's opening, then Bull rebuts Bear's opening. Each re
 
 ### Phase 4: Cross-Examination (~10-15s)
 
-The Judge reads the full transcript plus its own independent data. Uses Google Search grounding to cross-reference claims against public news and sentiment. Asks pointed questions, calls out cherry-picking, evaluates evidence quality.
+The Judge reads the full transcript plus its own independent data. Uses X/Twitter search and web search to cross-reference claims against real-time social sentiment and public news. Asks pointed questions, calls out cherry-picking, evaluates evidence quality.
 
 ### Phase 5: Verdict (~10-15s)
 
-The Judge delivers the verdict. This phase uses a **hybrid approach**: the verdict text streams naturally for dramatic effect, followed by a separate non-streaming structured output call to extract the formal scores. This guarantees valid JSON for the scores while keeping the streaming text natural.
+The Judge delivers the verdict. This phase uses a **hybrid approach**: the verdict text streams naturally for dramatic effect, followed by a separate non-streaming structured output call to extract the formal scores. This guarantees valid JSON for the scores while keeping the streaming text natural. (Note: xAI's streaming structured output support is limited, so the two-call approach is required.)
 
 **Verdict structure:**
 - **Score:** -100 (strong sell) to +100 (strong buy)
@@ -159,11 +159,11 @@ The Judge delivers the verdict. This phase uses a **hybrid approach**: the verdi
 
 ### Word Length Control
 
-Each Gemini call includes target word counts in the prompt. A **soft timeout** monitors the streaming output — if a response exceeds 2x the target word count, the stream is stopped. This prevents runaway responses without mid-sentence cuts from hard token limits.
+Each LLM call includes target word counts in the prompt. A **soft timeout** monitors the streaming output — if a response exceeds 2x the target word count, the stream is stopped. This prevents runaway responses without mid-sentence cuts from hard token limits.
 
 ### Phase Failure Handling
 
-If a Gemini call fails during any phase:
+If an LLM call fails during any phase:
 1. **Retry once** with the same prompt
 2. If still fails, **skip that agent's message** and continue the debate
 3. Subsequent phases adapt to missing context (prompts include: "If a previous argument is missing, proceed with available information")
@@ -186,7 +186,7 @@ Solana is pre-selected as the default (best Nansen SM coverage). Base and Ethere
 
 ## Trial Cooldown
 
-**Global per-token cooldown: 30 minutes.** If a trial for the same token address was completed within the last 30 minutes, the user sees the existing trial result with a countdown timer showing when a new trial can be started. This prevents redundant API usage and Gemini costs.
+**Global per-token cooldown: 30 minutes.** If a trial for the same token address was completed within the last 30 minutes, the user sees the existing trial result with a countdown timer showing when a new trial can be started. This prevents redundant API usage and LLM costs.
 
 The Nansen data cache (separate from trial cooldown) has its own TTLs per endpoint type, meaning a new trial after the cooldown still benefits from cached data if it's fresh.
 
@@ -199,7 +199,7 @@ The Nansen data cache (separate from trial cooldown) has its own TTLs per endpoi
 | `/` | Landing page — token input, chain selector, recent trials grid (last 10) |
 | `/trial/[id]` | Main debate page — courtroom with live streaming or completed replay |
 | `/verdict/[id]` | Shareable verdict page — separate layout optimized for social sharing, minimal JS, OG meta tags |
-| `/debug` | Debug page (behind env flag) — cache stats, API timings, Gemini token usage, error rates |
+| `/debug` | Debug page (behind env flag) — cache stats, API timings, LLM token usage, error rates |
 
 ### API Routes
 
@@ -401,7 +401,7 @@ Single-column interleaved stream with colored left borders per agent. During sim
 
 Agents use explicit citation syntax in their output: `[[cite:endpoint-name|display value]]`
 
-Examples in Gemini output:
+Examples in LLM output:
 ```
 Smart money has accumulated [[cite:sm-netflow|+$2.3M net inflow]] over the past 7 days,
 with [[cite:who-bought-sold|45 unique SM buyers]] entering positions...
@@ -411,14 +411,14 @@ The UI parses these during streaming into colored chips:
 - **During streaming:** Chip renders inline immediately as the syntax is detected in the stream
 - **After click/hover:** Chip expands to show the raw Nansen data snippet (the actual CLI output for that data point)
 - **Edge cases:**
-  - If Gemini outputs malformed citation syntax, fall back to rendering it as bold text
+  - If the LLM outputs malformed citation syntax, fall back to rendering it as bold text
   - If the cited endpoint data is unavailable (fetch failed), chip renders with a "data unavailable" state
   - Citation chips are stored in the `evidence_json` column for replay
 
 The explicit syntax approach is more reliable than post-hoc matching because:
 1. Stream parsing is deterministic (no fuzzy matching during real-time render)
 2. Each citation links to a specific data source (no ambiguity about which endpoint sourced a number)
-3. Gemini can be instructed to only cite data it actually received, preventing hallucinated citations
+3. The LLM can be instructed to only cite data it actually received, preventing hallucinated citations
 
 ### Verdict Display
 
@@ -469,7 +469,7 @@ Puppeteer server-side screenshot at `/api/verdict/[id]/image`:
 Available when `DEBUG_ENABLED=true` in env. Shows:
 - Nansen cache hit/miss stats
 - API call timings (per endpoint average)
-- Gemini token usage (per trial)
+- LLM token usage (per trial)
 - Recent trial error rates
 - Active/completed trial counts
 
@@ -523,9 +523,9 @@ alpha-court/
 │   ├── agents/
 │   │   ├── bull.ts                    # Bull data fetching + prompt construction
 │   │   ├── bear.ts                    # Bear data fetching + prompt construction
-│   │   ├── judge.ts                   # Judge cross-exam + verdict prompt (with grounding config)
+│   │   ├── judge.ts                   # Judge cross-exam + verdict prompt (with x_search/web_search)
 │   │   └── types.ts                   # Agent interfaces
-│   ├── gemini.ts                      # @google/genai SDK wrapper — streaming, structured output, grounding
+│   ├── llm.ts                         # Vercel AI SDK + xAI provider — streaming, structured output, x_search/web_search
 │   ├── debate-engine.ts               # Orchestrates 5-phase debate (runs server-side to completion)
 │   ├── citations.ts                   # Citation syntax parser ([[cite:x|y]] → structured data)
 │   ├── db.ts                          # SQLite setup (WAL mode) + queries
@@ -559,6 +559,7 @@ Each agent prompt includes:
 4. **Word target** — specific word count for the phase (opening: 200-300, rebuttal: 150-200)
 5. **Context injection** — the actual Nansen + supplementary data for the token
 6. **Missing data handling** — "If data is missing or unavailable, acknowledge it and work with what you have. Reduce your conviction accordingly."
+7. **Judge-specific:** X/Twitter search results and web search results are injected via xAI's `x_search` and `web_search` tools (model decides when to search)
 
 ### Citation Syntax Prompt
 
@@ -570,6 +571,7 @@ Examples:
 - [[cite:who-bought-sold|45 unique SM buyers]]
 - [[cite:dexscreener|$12.4M 24h volume]]
 - [[cite:goplus|no security flags detected]]
+- [[cite:x-search|bearish sentiment from @whale_alert]]
 
 Only cite data you have actually been provided. Never fabricate citations.
 ```
@@ -622,7 +624,7 @@ All three are equivalent for MVP since trading is not included.
 ## Environment Variables
 
 ```
-GEMINI_API_KEY=              # Google AI Studio key (billing enabled)
+XAI_API_KEY=                 # xAI API key (console.x.ai)
 DATABASE_PATH=./data/court.db
 NEXT_PUBLIC_APP_URL=         # For OG image URLs and share links
 DEBUG_ENABLED=false          # Enable /debug page
@@ -645,7 +647,7 @@ Nansen auth is handled via `~/.nansen/config.json` (volume mount), not env var.
 - GET /api/token/search (Nansen CLI primary + DexScreener fallback)
 
 ### Day 2: Debate Engine
-- Gemini wrapper with @google/genai SDK (streaming, structured output, grounding)
+- LLM wrapper with Vercel AI SDK + xAI provider (streaming, structured output, x_search/web_search)
 - Three agent modules (bull.ts, bear.ts, judge.ts) with prompts + data fetching
 - Citation syntax parser
 - Debate engine orchestrator (5-phase sequential logic, server-side completion)
@@ -686,7 +688,8 @@ Nansen auth is handled via `~/.nansen/config.json` (volume mount), not env var.
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@google/genai": "^1.0.0",
+    "ai": "^4.0.0",
+    "@ai-sdk/xai": "^3.0.0",
     "better-sqlite3": "^11.0.0",
     "nanoid": "^5.0.0",
     "puppeteer": "^23.0.0",
