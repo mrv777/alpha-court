@@ -161,7 +161,7 @@ export function TokenInput({
               role="option"
               aria-selected={i === activeIndex}
               className={cn(
-                "flex cursor-pointer items-center gap-3 px-3 py-2.5 transition-colors",
+                "flex cursor-pointer items-center gap-3 px-3 py-3 min-h-[44px] transition-colors",
                 i === activeIndex
                   ? "bg-court-border-light"
                   : "hover:bg-court-border"

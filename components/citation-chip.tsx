@@ -105,8 +105,8 @@ export function CitationChip({
           ref={popupRef}
           role="tooltip"
           className={cn(
-            "absolute left-0 top-full z-50 mt-1",
-            "w-64 max-h-48 overflow-auto",
+            "absolute left-0 sm:left-0 top-full z-50 mt-1",
+            "w-[calc(100vw-2rem)] sm:w-64 max-w-64 max-h-48 overflow-auto",
             "rounded-lg border border-court-border-light bg-court-surface p-3",
             "shadow-lg shadow-black/30",
             "text-xs font-mono text-court-text-muted",

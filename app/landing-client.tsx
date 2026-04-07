@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Gavel } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChainSelector } from "@/components/chain-selector";
 import { TokenInput } from "@/components/token-input";
@@ -25,6 +26,20 @@ interface TrialRow {
 interface LandingClientProps {
   recentTrials: TrialRow[];
 }
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0 },
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
 
 export function LandingClient({ recentTrials }: LandingClientProps) {
   const router = useRouter();
@@ -123,7 +138,12 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
   return (
     <div className="w-full max-w-xl mx-auto">
       {/* Search area — glass card */}
-      <div className="glow-border rounded-2xl p-4 sm:p-5">
+      <motion.div
+        className="glow-border rounded-2xl p-4 sm:p-5"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
         <div className="flex gap-2">
           <TokenInput
             chain={chain}
@@ -170,18 +190,26 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
             {isSubmitting ? "Starting Trial..." : "Begin Trial"}
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       {/* How it works — 3 agent previews */}
-      <div className="mt-12 grid grid-cols-3 gap-3">
+      <motion.div
+        className="mt-12 grid grid-cols-3 gap-3"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
         {[
           { label: "The Bull", desc: "Argues FOR", color: "text-bull", border: "border-bull/20", glow: "via-bull/40", avatar: "/bull-avatar.png" },
           { label: "The Judge", desc: "Decides", color: "text-judge", border: "border-judge/20", glow: "via-judge/40", avatar: "/judge-avatar.png" },
           { label: "The Bear", desc: "Argues AGAINST", color: "text-bear", border: "border-bear/20", glow: "via-bear/40", avatar: "/bear-avatar.png" },
         ].map((a) => (
-          <div
+          <motion.div
             key={a.label}
             className={`relative overflow-hidden rounded-xl border ${a.border} bg-white/[0.02] backdrop-blur-sm p-3 text-center`}
+            variants={fadeUp}
+            transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            whileHover={{ y: -2, transition: { duration: 0.2 } }}
           >
             {/* Top edge highlight */}
             <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${a.glow} to-transparent`} />
@@ -189,12 +217,17 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
             <img src={a.avatar} alt={a.label} className="size-10 rounded-lg mx-auto mb-2" />
             <p className={`text-xs font-bold ${a.color}`}>{a.label}</p>
             <p className="text-[10px] text-court-text-dim">{a.desc}</p>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Recent Trials */}
-      <section className="mt-14 w-full">
+      <motion.section
+        className="mt-14 w-full"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.7 }}
+      >
         <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-court-text-muted">
           Recent Trials
         </h2>
@@ -222,7 +255,7 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
             </p>
           </div>
         )}
-      </section>
+      </motion.section>
     </div>
   );
 }

@@ -161,14 +161,14 @@ function ConvictionMeter({
   animated: boolean;
 }) {
   return (
-    <div className="flex-1">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-court-text-muted">{label}</span>
-        <span className={cn("text-xs font-mono font-bold", color)}>
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs font-medium text-court-text-muted">{label}</span>
+        <span className={cn("text-sm font-mono font-bold", color)}>
           {value}
         </span>
       </div>
-      <div className="h-2 rounded-full bg-court-border overflow-hidden">
+      <div className="h-3 rounded-full bg-court-border overflow-hidden">
         <div
           className={cn(
             "h-full rounded-full",
@@ -217,11 +217,16 @@ export function VerdictDisplay({
   return (
     <div
       className={cn(
-        "rounded-xl border border-court-border bg-court-surface p-6 flex flex-col items-center gap-5",
+        "relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl p-6 flex flex-col items-center gap-5",
         bgGlow,
         className
       )}
     >
+      {/* Top edge highlight */}
+      <div className={cn(
+        "absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent",
+        verdict.score >= 20 ? "via-bull/40" : verdict.score <= -20 ? "via-bear/40" : "via-judge/30"
+      )} />
       {/* Score gauge */}
       <ScoreGauge score={verdict.score} animated={animated} />
 
@@ -257,20 +262,20 @@ export function VerdictDisplay({
       {/* Conviction meters */}
       <div
         className={cn(
-          "w-full max-w-sm flex gap-4",
+          "w-full max-w-md space-y-3",
           animated
             ? "opacity-100 transition-opacity duration-300 delay-[1400ms]"
             : "opacity-0"
         )}
       >
         <ConvictionMeter
-          label="Bull"
+          label="Bull Conviction"
           value={verdict.bull_conviction}
           color="text-bull"
           animated={animated}
         />
         <ConvictionMeter
-          label="Bear"
+          label="Bear Conviction"
           value={verdict.bear_conviction}
           color="text-bear"
           animated={animated}

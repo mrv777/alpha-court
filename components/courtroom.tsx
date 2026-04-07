@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { AgentPanel, AgentPanelCompact } from "@/components/agent-panel";
 import { DebateStream } from "@/components/debate-stream";
 import { DataProgressGrid } from "@/components/data-progress";
@@ -136,11 +137,18 @@ export function Courtroom({
       )}
 
       {/* Data gathering phase */}
-      {showGathering && (
-        <div className="px-4 py-6 border-b border-court-border shrink-0">
-          <DataProgressGrid items={dataProgress} />
-        </div>
-      )}
+      <AnimatePresence>
+        {showGathering && (
+          <motion.div
+            className="px-4 py-8 border-b border-court-border shrink-0"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+          >
+            <DataProgressGrid items={dataProgress} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main courtroom content — only show once we have messages or are past gathering */}
       {(messages.length > 0 || (phase && phase !== "gathering")) && (

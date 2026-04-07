@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { Share2, Download, Check, Copy } from "lucide-react";
+import { Share2, Download, Check } from "lucide-react";
 
 interface ShareButtonProps {
   trialId: string;
@@ -58,23 +58,24 @@ export function ShareButton({ trialId, className }: ShareButtonProps) {
   }, [trialId]);
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex items-center gap-3", className)}>
       <button
         type="button"
         onClick={handleShare}
         className={cn(
-          "flex items-center gap-1.5 rounded-lg border border-court-border bg-court-surface px-3 py-2 text-xs font-medium text-court-text transition-colors hover:bg-court-border",
-          copied && "border-bull/30 text-bull"
+          "flex items-center gap-2 rounded-xl border border-judge/20 bg-judge/[0.08] px-5 py-3 min-h-[44px]",
+          "text-sm font-semibold text-judge transition-all hover:bg-judge/[0.15] hover:border-judge/30",
+          copied && "border-bull/30 bg-bull/[0.08] text-bull"
         )}
       >
         {copied ? (
           <>
-            <Check className="size-3.5" />
+            <Check className="size-4" />
             Copied!
           </>
         ) : (
           <>
-            <Share2 className="size-3.5" />
+            <Share2 className="size-4" />
             Share Verdict
           </>
         )}
@@ -84,9 +85,9 @@ export function ShareButton({ trialId, className }: ShareButtonProps) {
         type="button"
         onClick={handleDownload}
         disabled={downloading}
-        className="flex items-center gap-1.5 rounded-lg border border-court-border bg-court-surface px-3 py-2 text-xs font-medium text-court-text transition-colors hover:bg-court-border disabled:opacity-50"
+        className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.04] px-5 py-3 min-h-[44px] text-sm font-medium text-court-text-muted transition-all hover:bg-white/[0.08] disabled:opacity-50"
       >
-        <Download className={cn("size-3.5", downloading && "animate-pulse")} />
+        <Download className={cn("size-4", downloading && "animate-pulse")} />
         {downloading ? "Generating..." : "Download Card"}
       </button>
     </div>

@@ -164,9 +164,10 @@ export function useDebateStream(trialId: string | null): DebateStreamState {
   const [state, dispatch] = useReducer(reducer, initialState);
   const retryCountRef = useRef(0);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const mountedRef = useRef(true);
 
   const connect = useCallback(() => {
-    if (!trialId) return;
+    if (!trialId || !mountedRef.current) return;
 
     const es = new EventSource(`/api/debate/${trialId}`);
     eventSourceRef.current = es;
@@ -230,11 +231,15 @@ export function useDebateStream(trialId: string | null): DebateStreamState {
     es.onerror = () => {
       es.close();
 
+      // Don't retry if component unmounted
+      if (!mountedRef.current) return;
+
       // Reconnect with exponential backoff (max 5 retries)
       if (retryCountRef.current < 5) {
         const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 16000);
         retryCountRef.current++;
         setTimeout(() => {
+          if (!mountedRef.current) return;
           dispatch({ type: "RESET" });
           connect();
         }, delay);
@@ -246,11 +251,13 @@ export function useDebateStream(trialId: string | null): DebateStreamState {
   }, [trialId]);
 
   useEffect(() => {
+    mountedRef.current = true;
     dispatch({ type: "RESET" });
     retryCountRef.current = 0;
     connect();
 
     return () => {
+      mountedRef.current = false;
       eventSourceRef.current?.close();
       eventSourceRef.current = null;
     };

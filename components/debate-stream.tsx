@@ -46,7 +46,6 @@ export function DebateStream({
     if (!el) return;
 
     if (isNearBottomRef.current) {
-      // Use rAF to batch scroll with render
       requestAnimationFrame(() => {
         el.scrollTop = el.scrollHeight;
       });
@@ -67,18 +66,13 @@ export function DebateStream({
   }, [messages.length, isStreaming]);
 
   // Group messages by phase to insert dividers
-  const phases = new Set<DebatePhase>();
   const renderedPhases = new Set<DebatePhase>();
-
-  for (const msg of messages) {
-    phases.add(msg.phase);
-  }
 
   return (
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="flex-1 overflow-y-auto min-h-0 px-4 py-4 space-y-1"
+      className="flex-1 overflow-y-auto min-h-0 px-5 py-6 space-y-4"
     >
       {messages.length === 0 && !isStreaming && !error && (
         <div className="flex items-center justify-center h-full text-court-text-dim text-sm">
@@ -108,20 +102,20 @@ export function DebateStream({
 
       {/* Error in stream */}
       {error && (
-        <div className="border-l-3 border-l-bear pl-4 py-3">
+        <div className="rounded-xl border border-bear/20 bg-bear/[0.06] p-4">
           <p className="text-sm text-bear">{error}</p>
         </div>
       )}
 
       {/* Streaming indicator */}
       {isStreaming && messages.length > 0 && !messages.some((m) => m.isStreaming) && (
-        <div className="flex items-center gap-2 py-2 pl-4">
+        <div className="flex items-center gap-2 py-3 pl-4">
           <div className="flex gap-1">
-            <span className="size-1.5 rounded-full bg-court-text-dim animate-pulse" />
-            <span className="size-1.5 rounded-full bg-court-text-dim animate-pulse [animation-delay:150ms]" />
-            <span className="size-1.5 rounded-full bg-court-text-dim animate-pulse [animation-delay:300ms]" />
+            <span className="size-1.5 rounded-full bg-judge animate-pulse" />
+            <span className="size-1.5 rounded-full bg-judge animate-pulse [animation-delay:200ms]" />
+            <span className="size-1.5 rounded-full bg-judge animate-pulse [animation-delay:400ms]" />
           </div>
-          <span className="text-xs text-court-text-dim">
+          <span className="text-xs font-medium text-court-text-dim">
             {phase ? `${PHASE_LABELS[phase]}...` : "Preparing..."}
           </span>
         </div>
@@ -132,12 +126,15 @@ export function DebateStream({
 
 function PhaseDivider({ phase }: { phase: DebatePhase }) {
   return (
-    <div className="flex items-center gap-3 py-4">
-      <div className="flex-1 h-px bg-court-border-light" />
-      <span className="text-xs font-semibold uppercase tracking-wider text-court-text-dim">
-        {PHASE_LABELS[phase]}
-      </span>
-      <div className="flex-1 h-px bg-court-border-light" />
+    <div className="flex items-center gap-4 py-4 my-1">
+      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-judge/20 to-transparent" />
+      <div className="flex items-center gap-2 px-3.5 py-1 rounded-full border border-judge/20 bg-judge/[0.06]">
+        <span className="size-1.5 rounded-full bg-judge/50" />
+        <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-judge/80">
+          {PHASE_LABELS[phase]}
+        </span>
+      </div>
+      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-judge/20 to-transparent" />
     </div>
   );
 }

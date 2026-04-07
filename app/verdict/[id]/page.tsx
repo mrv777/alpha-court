@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
@@ -90,7 +91,13 @@ export default async function VerdictPage({ params }: Props) {
     return (
       <div className="min-h-screen bg-court-bg flex flex-col items-center justify-center px-4">
         <div className="text-center">
-          <span className="text-4xl mb-4 block">⚖️</span>
+          <Image
+            src="/logo.png"
+            alt="Alpha Court"
+            width={64}
+            height={64}
+            className="rounded-lg mx-auto mb-4"
+          />
           <h1 className="text-xl font-bold text-court-text mb-2">
             Trial in Progress...
           </h1>

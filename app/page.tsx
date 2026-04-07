@@ -31,11 +31,20 @@ export default function HomePage() {
 
   return (
     <main className="relative flex flex-1 flex-col items-center px-4 pt-20 pb-12 overflow-hidden">
-      {/* Ambient glow orbs */}
+      {/* Ambient glow orbs — animated */}
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute top-[-20%] left-[10%] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.10)_0%,transparent_70%)] blur-3xl" />
-        <div className="absolute bottom-[-10%] right-[5%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(34,197,94,0.06)_0%,transparent_70%)] blur-3xl" />
-        <div className="absolute top-[50%] right-[30%] h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.05)_0%,transparent_70%)] blur-3xl" />
+        <div
+          className="absolute top-[-20%] left-[10%] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.10)_0%,transparent_70%)] blur-3xl"
+          style={{ animation: "float-1 20s ease-in-out infinite, pulse-glow 8s ease-in-out infinite" }}
+        />
+        <div
+          className="absolute bottom-[-10%] right-[5%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(34,197,94,0.06)_0%,transparent_70%)] blur-3xl"
+          style={{ animation: "float-2 25s ease-in-out infinite, pulse-glow 10s ease-in-out infinite 2s" }}
+        />
+        <div
+          className="absolute top-[50%] right-[30%] h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.05)_0%,transparent_70%)] blur-3xl"
+          style={{ animation: "float-3 22s ease-in-out infinite, pulse-glow 12s ease-in-out infinite 4s" }}
+        />
       </div>
 
       {/* Dot grid pattern — faded at edges */}
@@ -51,7 +60,7 @@ export default function HomePage() {
           className="rounded-xl mb-5 shadow-[0_0_60px_rgba(245,158,11,0.2)]"
           priority
         />
-        <h1 className="text-4xl font-bold tracking-tight text-court-text sm:text-5xl [text-shadow:0_0_40px_rgba(245,158,11,0.25),0_0_80px_rgba(245,158,11,0.08)]">
+        <h1 className="font-heading text-4xl font-bold tracking-tight text-court-text sm:text-5xl [text-shadow:0_0_40px_rgba(245,158,11,0.25),0_0_80px_rgba(245,158,11,0.08)]">
           Alpha Court
         </h1>
       </div>

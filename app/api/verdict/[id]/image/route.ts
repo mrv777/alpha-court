@@ -81,7 +81,7 @@ export async function GET(
   // Check image cache
   const cached = imageCache.get(trialId);
   if (cached && Date.now() - cached.generatedAt < IMAGE_CACHE_TTL) {
-    return new Response(cached.png, {
+    return new Response(new Uint8Array(cached.png), {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
@@ -140,7 +140,7 @@ export async function GET(
     // Cache the result
     imageCache.set(trialId, { png, generatedAt: Date.now() });
 
-    return new Response(png, {
+    return new Response(new Uint8Array(png), {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
@@ -151,7 +151,7 @@ export async function GET(
 
     // Serve stale cache if available
     if (cached) {
-      return new Response(cached.png, {
+      return new Response(new Uint8Array(cached.png), {
         headers: {
           "Content-Type": "image/png",
           "Cache-Control": "public, max-age=60",
@@ -160,7 +160,7 @@ export async function GET(
     }
 
     // Last resort: fallback image
-    return new Response(FALLBACK_PNG, {
+    return new Response(new Uint8Array(FALLBACK_PNG), {
       status: 500,
       headers: {
         "Content-Type": "image/png",

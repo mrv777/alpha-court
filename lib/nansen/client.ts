@@ -1,6 +1,7 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import { generateCacheKey, getCached, setCache } from "@/lib/cache";
+import { log } from "@/lib/logger";
 import type { NansenCliResult } from "./types";
 
 const execAsync = promisify(exec);
@@ -145,6 +146,7 @@ export async function nansenCliCall<T>(
   if (!skipCache && ttlSeconds > 0) {
     const cached = getCached(cacheKey);
     if (cached !== null) {
+      log.debug("nansen cache hit", { command });
       return {
         success: true,
         data: cached as T,
@@ -157,9 +159,11 @@ export async function nansenCliCall<T>(
 
   // Execute with retry
   let lastError: string | null = null;
+  const startTime = Date.now();
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
+      log.info("nansen cli call", { command, attempt });
       const raw = await execNansenCli(command);
 
       if (!raw) {
@@ -173,6 +177,7 @@ export async function nansenCliCall<T>(
         setCache(cacheKey, command, params, parsed, chain, tokenAddress, ttlSeconds);
       }
 
+      log.info("nansen cli success", { command, durationMs: Date.now() - startTime, cached: false });
       return {
         success: true,
         data: parsed,
@@ -182,6 +187,7 @@ export async function nansenCliCall<T>(
       };
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
+      log.warn("nansen cli error", { command, attempt, error: lastError });
 
       // Wait before retry (except on last attempt)
       if (attempt < MAX_RETRIES) {
@@ -190,6 +196,7 @@ export async function nansenCliCall<T>(
     }
   }
 
+  log.error("nansen cli failed after retries", { command, error: lastError, durationMs: Date.now() - startTime });
   return {
     success: false,
     data: null,

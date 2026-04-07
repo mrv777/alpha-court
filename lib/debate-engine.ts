@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { streamChat, structuredOutput, LLMError } from "@/lib/llm";
+import { log } from "@/lib/logger";
 import { fetchBullData, buildBullOpeningPrompt, buildBullRebuttalPrompt, BULL_MODEL } from "@/lib/agents/bull";
 import { fetchBearData, buildBearOpeningPrompt, buildBearRebuttalPrompt, BEAR_MODEL } from "@/lib/agents/bear";
 import {
@@ -196,17 +197,26 @@ async function streamAgentWithRetry(
   emit: (event: DebateEvent) => void,
   options?: { tools?: Record<string, unknown>; targetWords?: number }
 ): Promise<string | null> {
+  log.info(`${agent} ${phase} starting`, { model });
+  const startTime = Date.now();
   try {
-    return await streamAgent(agent, phase, model, systemPrompt, userPrompt, emit, options);
+    const result = await streamAgent(agent, phase, model, systemPrompt, userPrompt, emit, options);
+    log.info(`${agent} ${phase} complete`, { durationMs: Date.now() - startTime, words: result.split(/\s+/).length });
+    return result;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    log.warn(`${agent} ${phase} failed, retrying`, { error: msg, durationMs: Date.now() - startTime });
     emit({ type: "error", message: `${agent} ${phase} failed: ${msg}`, recoverable: true });
 
-    // Retry once
+    // Retry once after brief delay
+    await new Promise((r) => setTimeout(r, 3000));
     try {
-      return await streamAgent(agent, phase, model, systemPrompt, userPrompt, emit, options);
+      const result = await streamAgent(agent, phase, model, systemPrompt, userPrompt, emit, options);
+      log.info(`${agent} ${phase} succeeded on retry`, { durationMs: Date.now() - startTime });
+      return result;
     } catch (retryErr) {
       const retryMsg = retryErr instanceof Error ? retryErr.message : String(retryErr);
+      log.error(`${agent} ${phase} failed after retry`, { error: retryMsg, durationMs: Date.now() - startTime });
       emit({
         type: "error",
         message: `${agent} ${phase} failed after retry: ${retryMsg}. Skipping.`,
@@ -280,6 +290,9 @@ export async function runDebate(
     }
   };
 
+  log.info("debate started", { trialId, tokenAddress, chain, tokenName });
+  const debateStart = Date.now();
+
   try {
     // ── Phase 1: Data Gathering ─────────────────────────────────────
     emit({ type: "phase", phase: "gathering", status: "start" });
@@ -291,16 +304,19 @@ export async function runDebate(
     }
 
     // Fetch Bull data (all concurrent within group)
+    const gatherStart = Date.now();
     let bullData: BullData;
     try {
       bullData = await fetchBullData(tokenAddress, chain);
       for (const ep of BULL_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "complete" });
       }
+      log.info("bull data fetched", { trialId });
     } catch (err) {
       for (const ep of BULL_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "error" });
       }
+      log.error("bull data fetch failed", { trialId, error: err instanceof Error ? err.message : String(err) });
       bullData = { smNetflow: null, whoBought: null, flowIntelligence: null, profilerPnl: null, dexScreener: null, jupiterPrice: null };
     }
 
@@ -311,10 +327,12 @@ export async function runDebate(
       for (const ep of BEAR_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "complete" });
       }
+      log.info("bear data fetched", { trialId });
     } catch (err) {
       for (const ep of BEAR_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "error" });
       }
+      log.error("bear data fetch failed", { trialId, error: err instanceof Error ? err.message : String(err) });
       bearData = { dexTrades: null, holders: null, smDexTrades: null, tokenFlows: null, dexScreener: null, security: null };
     }
 
@@ -325,12 +343,16 @@ export async function runDebate(
       for (const ep of JUDGE_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "complete" });
       }
+      log.info("judge data fetched", { trialId });
     } catch (err) {
       for (const ep of JUDGE_ENDPOINTS) {
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "error" });
       }
+      log.error("judge data fetch failed", { trialId, error: err instanceof Error ? err.message : String(err) });
       judgeData = { tokenInfo: null, ohlcv: null, whoSold: null, profilerPnl: null };
     }
+
+    log.info("data gathering complete", { trialId, durationMs: Date.now() - gatherStart });
 
     emit({ type: "phase", phase: "gathering", status: "complete" });
 
@@ -483,6 +505,7 @@ export async function runDebate(
         bear_conviction: 50,
       };
       const msg = err instanceof Error ? err.message : String(err);
+      log.error("structured verdict extraction failed", { trialId, error: msg });
       emit({ type: "error", message: `Structured verdict extraction failed: ${msg}`, recoverable: true });
     }
 
@@ -510,9 +533,11 @@ export async function runDebate(
     });
 
     emit({ type: "phase", phase: "verdict", status: "complete" });
+    log.info("debate completed", { trialId, durationMs: Date.now() - debateStart, verdictLabel: scores.label, score: scores.score });
     emit({ type: "done" });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    log.error("debate failed", { trialId, error: message, durationMs: Date.now() - debateStart });
     setTrialError(trialId, message);
     emit({ type: "error", message, recoverable: false });
     emit({ type: "done" });
