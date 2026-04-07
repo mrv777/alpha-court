@@ -499,7 +499,7 @@ export async function runDebate(
     // Structured output call for scores
     let scores: VerdictScores;
     try {
-      const structuredPrompt = buildJudgeVerdictStructuredPrompt(verdict || transcript);
+      const structuredPrompt = buildJudgeVerdictStructuredPrompt(verdict || transcript, crossExam || undefined);
       scores = await structuredOutput(JUDGE_MODEL, structuredPrompt.system, structuredPrompt.user, verdictSchema);
     } catch (err) {
       // Fallback scores if structured output fails

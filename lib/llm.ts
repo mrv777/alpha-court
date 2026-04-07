@@ -62,6 +62,44 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+// ── Grok tag sanitisation ─────────────────────────────────────────────
+
+/** Regex that matches Grok's internal XML-like markup emitted during tool use */
+const GROK_TAG_RE = /<\/?(?:grok:\w+|argument)[^>]*>/g;
+
+/** Strip Grok internal tags from text, returning cleaned string */
+function stripGrokTags(text: string): string {
+  return text.replace(GROK_TAG_RE, "");
+}
+
+/**
+ * Known Grok tag opening patterns.  A trailing `<...` that is a prefix of
+ * one of these (or that already starts with one of these but hasn't closed)
+ * is held back so a cross-chunk tag isn't partially yielded.
+ *
+ * We intentionally do NOT hold back on generic `<` (e.g. "$154K < $200K")
+ * because that would stall normal text.
+ */
+const GROK_TAG_PREFIXES = ["<grok:", "</grok:", "<argument", "</argument"];
+
+/**
+ * Return the "safe" prefix of `text` — everything up to the last unclosed
+ * `<` **only if** the trailing fragment looks like it could be a Grok tag.
+ */
+function safePrefix(text: string): string {
+  const lastOpen = text.lastIndexOf("<");
+  if (lastOpen === -1) return text;
+  const lastClose = text.lastIndexOf(">");
+  if (lastClose > lastOpen) return text; // tag is fully closed
+
+  const tail = text.slice(lastOpen);
+  const mightBeGrokTag = GROK_TAG_PREFIXES.some((p) =>
+    tail.length <= p.length ? p.startsWith(tail) : tail.startsWith(p)
+  );
+  if (mightBeGrokTag) return text.slice(0, lastOpen);
+  return text; // not a Grok tag prefix — safe to emit (e.g. "< $200K")
+}
+
 // ── Streaming chat ─────────────────────────────────────────────────────
 
 export interface StreamChatOptions {
@@ -121,6 +159,10 @@ export async function* streamChat(
   const STALL_TIMEOUT_MS = 45_000;
   const FIRST_TOKEN_TIMEOUT_MS = 90_000;
 
+  // Buffer for Grok tag stripping — tags may span multiple chunks
+  let rawBuffer = "";
+  let emittedLen = 0;
+
   for await (const chunk of result.textStream) {
     // Stall detection — allow longer for first token (reasoning models + tool use)
     const now = Date.now();
@@ -141,15 +183,29 @@ export async function* streamChat(
     lastChunkTime = now;
     receivedFirstChunk = true;
 
-    // Soft timeout: stop if we've exceeded 2x target word count
-    wordCount += chunk.split(/\s+/).filter(Boolean).length;
-    if (wordCount > maxWords) {
-      log.info("streamChat soft word limit hit", { model, wordCount, maxWords });
-      yield chunk;
-      return;
-    }
+    // Accumulate raw text, strip Grok tags, yield only the safe new delta
+    rawBuffer += chunk;
+    const cleaned = stripGrokTags(rawBuffer);
+    const safe = safePrefix(cleaned);
+    const delta = safe.slice(emittedLen);
 
-    yield chunk;
+    if (delta) {
+      emittedLen = safe.length;
+      wordCount += delta.split(/\s+/).filter(Boolean).length;
+      if (wordCount > maxWords) {
+        log.info("streamChat soft word limit hit", { model, wordCount, maxWords });
+        yield delta;
+        return;
+      }
+      yield delta;
+    }
+  }
+
+  // Final flush — no more chunks, so emit whatever remains
+  const finalCleaned = stripGrokTags(rawBuffer);
+  const finalDelta = finalCleaned.slice(emittedLen);
+  if (finalDelta) {
+    yield finalDelta;
   }
 
   log.info("streamChat complete", { model, wordCount, durationMs: Date.now() - startTime });

@@ -162,7 +162,8 @@ Render your final verdict. Weigh all evidence presented during the trial, combin
 - Structure: Brief summary of key evidence → Your assessment → Clear verdict
 - Cite data using [[cite:endpoint|value]] format
 - End with a clear, actionable recommendation
-- Be decisive — traders need clarity, not hedging`;
+- Be clear and actionable — but proportional. A slight edge should yield a moderate recommendation, not an extreme one. Reserve "Strong Buy/Sell" for overwhelming, unambiguous evidence.
+- Your verdict must be consistent with your cross-examination findings. If you flagged significant risks in the cross-examination, your verdict should reflect that caution.`;
 
   return { system: JUDGE_SYSTEM, user };
 }
@@ -177,19 +178,27 @@ export const verdictSchema = z.object({
   bear_conviction: z.number().min(0).max(100),
 });
 
-export function buildJudgeVerdictStructuredPrompt(verdictText: string): {
+export function buildJudgeVerdictStructuredPrompt(verdictText: string, crossExamText?: string): {
   system: string;
   user: string;
 } {
-  const system = `You extract structured scores from a judge's verdict text. Output only the requested JSON structure.`;
+  const system = `You extract structured scores from a judge's verdict and cross-examination text. The scores must reflect the overall tone and caveats expressed in BOTH the cross-examination and the final verdict. Output only the requested JSON structure.`;
 
-  const user = `## Verdict Text
+  const user = `${crossExamText ? `## Cross-Examination Analysis\n${crossExamText}\n\n` : ""}## Final Verdict
 ${verdictText}
 
 ## Task
 Extract the following from the verdict above:
-- score: A number from -100 (extreme sell) to 100 (extreme buy). 0 = neutral/hold.
-- label: One of: "Strong Buy", "Buy", "Lean Buy", "Hold", "Lean Sell", "Sell", "Strong Sell"
+- score: A number from -100 (extreme sell) to 100 (extreme buy). 0 = neutral/hold. Calibrate using these ranges:
+  - 70 to 100: Strong Buy — overwhelming, unambiguous bullish evidence
+  - 40 to 69: Buy — clear bullish edge with manageable risks
+  - 10 to 39: Lean Buy — slight bullish edge but notable risks or caveats
+  - -9 to 9: Hold — balanced, mixed, or insufficient evidence
+  - -39 to -10: Lean Sell — slight bearish edge
+  - -69 to -40: Sell — clear bearish evidence
+  - -100 to -70: Strong Sell — overwhelming bearish evidence
+  If the text mentions significant risks or caveats alongside a bullish/bearish lean, the score should reflect that uncertainty (closer to center, not extreme).
+- label: One of: "Strong Buy", "Buy", "Lean Buy", "Hold", "Lean Sell", "Sell", "Strong Sell" — must match the score range above
 - summary: A single sentence capturing the verdict (max 50 words)
 - bull_conviction: How convincing was the Bull's case? 0-100
 - bear_conviction: How convincing was the Bear's case? 0-100`;

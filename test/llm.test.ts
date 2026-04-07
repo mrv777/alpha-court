@@ -148,6 +148,100 @@ describe("streamChat", () => {
   });
 });
 
+describe("streamChat Grok tag stripping", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function mockStream(chunks: string[]) {
+    mockStreamText.mockReturnValue({
+      textStream: (async function* () {
+        for (const c of chunks) yield c;
+      })(),
+    });
+  }
+
+  async function collect(opts?: { targetWords?: number }): Promise<string> {
+    let full = "";
+    for await (const chunk of streamChat(FAST, "sys", "user", opts)) {
+      full += chunk;
+    }
+    return full;
+  }
+
+  it("strips full Grok tags within a single chunk", async () => {
+    mockStream(['text<grok:render type="render_inline_citation">more text']);
+    expect(await collect()).toBe("textmore text");
+  });
+
+  it("strips closing Grok tags", async () => {
+    mockStream(["data</argument>rest"]);
+    expect(await collect()).toBe("datarest");
+  });
+
+  it("strips </grok:render> tags", async () => {
+    mockStream(["before</grok:render>after"]);
+    expect(await collect()).toBe("beforeafter");
+  });
+
+  it("strips multiple Grok tags in sequence", async () => {
+    mockStream([
+      'value</argument>\n<grok:render type="render_inline_citation">\n</grok:render>clean',
+    ]);
+    expect(await collect()).toBe("value\n\nclean");
+  });
+
+  it("strips Grok tag split across two chunks", async () => {
+    mockStream(["text before<grok:ren", 'der type="foo">text after']);
+    expect(await collect()).toBe("text beforetext after");
+  });
+
+  it("strips </argument> split across chunks", async () => {
+    mockStream(["data</argu", "ment>rest"]);
+    expect(await collect()).toBe("datarest");
+  });
+
+  it("preserves legitimate < comparisons (e.g. $154K < $200K)", async () => {
+    mockStream(["buy volume $154K < sell volume $200K"]);
+    expect(await collect()).toBe("buy volume $154K < sell volume $200K");
+  });
+
+  it("preserves < at end of chunk followed by non-tag text", async () => {
+    mockStream(["price < ", "$0.05 target"]);
+    expect(await collect()).toBe("price < $0.05 target");
+  });
+
+  it("preserves > in normal text", async () => {
+    mockStream(["buys > sells, net positive"]);
+    expect(await collect()).toBe("buys > sells, net positive");
+  });
+
+  it("handles chunk that is entirely a Grok tag", async () => {
+    mockStream(['<argument name="citation_id">']);
+    expect(await collect()).toBe("");
+  });
+
+  it("handles empty stream", async () => {
+    mockStream([]);
+    expect(await collect()).toBe("");
+  });
+
+  it("handles tag at very start of stream", async () => {
+    mockStream(['<grok:render>content after']);
+    expect(await collect()).toBe("content after");
+  });
+
+  it("handles tag at very end of stream", async () => {
+    mockStream(['content before</grok:render>']);
+    expect(await collect()).toBe("content before");
+  });
+
+  it("strips argument tag with attributes", async () => {
+    mockStream(['<argument name="citation_id">token-info</argument>']);
+    expect(await collect()).toBe("token-info");
+  });
+});
+
 describe("structuredOutput", () => {
   beforeEach(() => {
     vi.clearAllMocks();
