@@ -1,5 +1,16 @@
-import { Scale } from "lucide-react";
-import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getDb } from "@/lib/db";
+import { TrialClient } from "./trial-client";
+
+interface TrialRow {
+  id: string;
+  token_address: string;
+  chain: string;
+  token_name: string | null;
+  token_symbol: string | null;
+  status: string;
+  error_message: string | null;
+}
 
 export default async function TrialPage({
   params,
@@ -8,21 +19,15 @@ export default async function TrialPage({
 }) {
   const { id } = await params;
 
-  return (
-    <main className="flex flex-1 flex-col items-center justify-center px-4">
-      <Scale className="size-12 text-judge mb-4" />
-      <h1 className="text-2xl font-bold text-court-text mb-2">
-        Trial {id}
-      </h1>
-      <p className="text-court-text-muted mb-6">
-        The courtroom is being prepared...
-      </p>
-      <Link
-        href="/"
-        className="text-sm text-judge underline underline-offset-2 hover:text-judge/80 transition-colors"
-      >
-        Back to Alpha Court
-      </Link>
-    </main>
-  );
+  const trial = getDb()
+    .prepare(
+      "SELECT id, token_address, chain, token_name, token_symbol, status, error_message FROM trials WHERE id = ?"
+    )
+    .get(id) as TrialRow | undefined;
+
+  if (!trial) {
+    notFound();
+  }
+
+  return <TrialClient trial={trial} />;
 }
