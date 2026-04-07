@@ -3,6 +3,9 @@ export interface DexScreenerTokenData {
   priceUsd: number;
   liquidityUsd: number;
   volume24hUsd: number;
+  priceChangeH1: number | null;
+  priceChangeH6: number | null;
+  priceChangeH24: number | null;
   fdvUsd: number | null;
   marketCapUsd: number | null;
   pairCreatedAt: string | null;

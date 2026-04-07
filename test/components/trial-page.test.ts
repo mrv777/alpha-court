@@ -12,6 +12,7 @@ describe("Trial page state handling", () => {
       isStreaming: true,
       error: null,
       dataProgress: [],
+      tokenStats: null,
     };
     const showPreparing =
       !state.phase &&
@@ -31,6 +32,7 @@ describe("Trial page state handling", () => {
       dataProgress: [
         { endpoint: "sm-netflow", agent: "bull", status: "pending" },
       ],
+      tokenStats: null,
     };
     const showGathering =
       state.phase === "gathering" ||
@@ -54,6 +56,7 @@ describe("Trial page state handling", () => {
       isStreaming: true,
       error: null,
       dataProgress: [],
+      tokenStats: null,
     };
     const showContent = state.messages.length > 0;
     expect(showContent).toBe(true);
@@ -100,6 +103,7 @@ describe("Trial page state handling", () => {
       isStreaming: false,
       error: null,
       dataProgress: [],
+      tokenStats: null,
     };
 
     // All messages present and not streaming
@@ -125,6 +129,7 @@ describe("Trial page state handling", () => {
       isStreaming: false,
       error: "LLM API failed",
       dataProgress: [],
+      tokenStats: null,
     };
 
     expect(state.error).toBe("LLM API failed");

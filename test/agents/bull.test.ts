@@ -40,7 +40,7 @@ function mockAllSuccess() {
     success: true, data: { realized_pnl_usd: 500000, realized_pnl_percent: 72, win_rate: 0.72, traded_times: 150, traded_token_count: 45, top5_tokens: [] }, error: null, cached: false, command: "",
   });
   vi.mocked(dex.getDexScreenerToken).mockResolvedValue({
-    success: true, data: { priceUsd: 0.00034, liquidityUsd: 500000, volume24hUsd: 1200000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-06-01T00:00:00Z", imageUrl: null }, error: null, cached: false,
+    success: true, data: { priceUsd: 0.00034, liquidityUsd: 500000, volume24hUsd: 1200000, priceChangeH1: 2.5, priceChangeH6: -1.2, priceChangeH24: 15.2, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-06-01T00:00:00Z", imageUrl: null }, error: null, cached: false,
   });
   vi.mocked(jup.getJupiterPrice).mockResolvedValue({
     success: true, data: { usdPrice: 0.00034, priceChange24h: 15.2 }, error: null, cached: false,
@@ -103,7 +103,7 @@ describe("buildBullOpeningPrompt", () => {
     whoBought: [{ address: "w1", address_label: "SM", bought_token_volume: 50000, bought_volume_usd: 50000, sold_token_volume: 0, sold_volume_usd: 0, token_trade_volume: 50000, trade_volume_usd: 50000 }],
     flowIntelligence: null,
     profilerPnl: null,
-    dexScreener: { priceUsd: 0.00034, liquidityUsd: 500000, volume24hUsd: 1200000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-06-01T00:00:00Z", imageUrl: null },
+    dexScreener: { priceUsd: 0.00034, liquidityUsd: 500000, volume24hUsd: 1200000, priceChangeH1: 2.5, priceChangeH6: -1.2, priceChangeH24: 15.2, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-06-01T00:00:00Z", imageUrl: null },
     jupiterPrice: { usdPrice: 0.00034, priceChange24h: 15.2 },
   };
 

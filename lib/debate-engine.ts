@@ -61,6 +61,14 @@ export interface ErrorEvent {
   recoverable: boolean;
 }
 
+export interface TokenStatsEvent {
+  type: "token_stats";
+  tokenIconUrl: string | null;
+  priceUsd: number | null;
+  mcapUsd: number | null;
+  liquidityUsd: number | null;
+}
+
 export interface DoneEvent {
   type: "done";
 }
@@ -70,6 +78,7 @@ export type DebateEvent =
   | DataProgressEvent
   | ChunkEvent
   | MessageCompleteEvent
+  | TokenStatsEvent
   | VerdictEvent
   | ErrorEvent
   | DoneEvent;
@@ -383,6 +392,15 @@ export async function runDebate(
         liquidityUsd: dex.liquidityUsd,
       });
     }
+
+    // Notify clients of token stats
+    emit({
+      type: "token_stats",
+      tokenIconUrl: dex?.imageUrl ?? null,
+      priceUsd: dex?.priceUsd ?? null,
+      mcapUsd: dex?.marketCapUsd ?? null,
+      liquidityUsd: dex?.liquidityUsd ?? null,
+    });
 
     // ── Phase 2: Opening Statements (parallel) ──────────────────────
     emit({ type: "phase", phase: "opening", status: "start" });

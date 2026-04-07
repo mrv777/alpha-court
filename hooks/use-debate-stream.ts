@@ -28,6 +28,13 @@ export interface Verdict {
   safety: string;
 }
 
+export interface TokenStats {
+  tokenIconUrl: string | null;
+  priceUsd: number | null;
+  mcapUsd: number | null;
+  liquidityUsd: number | null;
+}
+
 export interface DebateStreamState {
   messages: DebateMessage[];
   phase: DebatePhase | null;
@@ -35,6 +42,7 @@ export interface DebateStreamState {
   isStreaming: boolean;
   error: string | null;
   dataProgress: DataProgress[];
+  tokenStats: TokenStats | null;
 }
 
 // ── Reducer ───────────────────────────────────────────────────────────
@@ -44,6 +52,7 @@ type Action =
   | { type: "DATA_PROGRESS"; endpoint: string; agent: AgentRole; status: "pending" | "complete" | "error" }
   | { type: "CHUNK"; agent: AgentRole; phase: DebatePhase; text: string }
   | { type: "MESSAGE_COMPLETE"; agent: AgentRole; phase: DebatePhase; content: string; evidence: Array<{ endpoint: string; displayValue: string }> }
+  | { type: "TOKEN_STATS"; tokenStats: TokenStats }
   | { type: "VERDICT"; verdict: Verdict }
   | { type: "ERROR"; message: string }
   | { type: "DONE" }
@@ -132,6 +141,9 @@ function reducer(state: DebateStreamState, action: Action): DebateStreamState {
       return { ...state, messages };
     }
 
+    case "TOKEN_STATS":
+      return { ...state, tokenStats: action.tokenStats };
+
     case "VERDICT":
       return { ...state, verdict: action.verdict };
 
@@ -156,6 +168,7 @@ const initialState: DebateStreamState = {
   isStreaming: true,
   error: null,
   dataProgress: [],
+  tokenStats: null,
 };
 
 // ── Hook ──────────────────────────────────────────────────────────────
@@ -206,6 +219,11 @@ export function useDebateStream(trialId: string | null): DebateStreamState {
         content: data.content,
         evidence: data.evidence || [],
       });
+    });
+
+    es.addEventListener("token_stats", (e) => {
+      const data = JSON.parse(e.data);
+      dispatch({ type: "TOKEN_STATS", tokenStats: data });
     });
 
     es.addEventListener("verdict", (e) => {

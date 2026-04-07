@@ -34,6 +34,7 @@ const MOCK_PAIRS = [
     baseToken: { address: "TOKEN1", symbol: "TK" },
     quoteToken: { address: "USDC", symbol: "USDC" },
     priceUsd: "1.50",
+    priceChange: { h1: 2.5, h6: -1.2, h24: 8.3 },
     liquidity: { usd: 50000 },
     volume: { h24: 100000 },
     fdv: 1000000,
@@ -44,6 +45,7 @@ const MOCK_PAIRS = [
     baseToken: { address: "TOKEN1", symbol: "TK" },
     quoteToken: { address: "SOL", symbol: "SOL" },
     priceUsd: "1.48",
+    priceChange: { h1: 3.1, h6: -0.5, h24: 9.7 },
     liquidity: { usd: 200000 },
     volume: { h24: 300000 },
     fdv: 1000000,
@@ -65,6 +67,9 @@ describe("getDexScreenerToken", () => {
     expect(result.data).not.toBeNull();
     // Should pick second pair (liquidity 200k > 50k)
     expect(result.data!.priceUsd).toBe(1.48);
+    expect(result.data!.priceChangeH1).toBe(3.1);
+    expect(result.data!.priceChangeH6).toBe(-0.5);
+    expect(result.data!.priceChangeH24).toBe(9.7);
     expect(result.data!.fdvUsd).toBe(1000000);
     expect(result.data!.marketCapUsd).toBe(800000);
   });
@@ -156,6 +161,9 @@ describe("getDexScreenerToken", () => {
     expect(result.data!.priceUsd).toBe(0);
     expect(result.data!.liquidityUsd).toBe(0);
     expect(result.data!.volume24hUsd).toBe(0);
+    expect(result.data!.priceChangeH1).toBeNull();
+    expect(result.data!.priceChangeH6).toBeNull();
+    expect(result.data!.priceChangeH24).toBeNull();
     expect(result.data!.fdvUsd).toBeNull();
     expect(result.data!.pairCreatedAt).toBeNull();
   });

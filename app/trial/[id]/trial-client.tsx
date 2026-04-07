@@ -61,11 +61,11 @@ export function TrialClient({ trial }: TrialClientProps) {
           tokenName={tokenName}
           tokenSymbol={trial.token_symbol}
           tokenAddress={trial.token_address}
-          tokenIconUrl={trial.token_icon_url}
+          tokenIconUrl={state.tokenStats?.tokenIconUrl ?? trial.token_icon_url}
           chain={trial.chain}
-          priceUsd={trial.price_usd}
-          mcapUsd={trial.mcap_usd}
-          liquidityUsd={trial.liquidity_usd}
+          priceUsd={state.tokenStats?.priceUsd ?? trial.price_usd}
+          mcapUsd={state.tokenStats?.mcapUsd ?? trial.mcap_usd}
+          liquidityUsd={state.tokenStats?.liquidityUsd ?? trial.liquidity_usd}
           state={state}
         />
       </div>

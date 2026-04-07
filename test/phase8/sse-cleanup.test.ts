@@ -10,6 +10,7 @@ describe("SSE cleanup and reconnection", () => {
       isStreaming: true,
       error: null,
       dataProgress: [],
+      tokenStats: null,
     };
     expect(state.isStreaming).toBe(true);
   });
@@ -30,6 +31,7 @@ describe("SSE cleanup and reconnection", () => {
       isStreaming: true,
       error: null,
       dataProgress: [],
+      tokenStats: null,
     };
 
     // After DONE
@@ -55,6 +57,7 @@ describe("SSE cleanup and reconnection", () => {
       isStreaming: true,
       error: null,
       dataProgress: [],
+      tokenStats: null,
     };
 
     // After ERROR

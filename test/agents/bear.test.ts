@@ -40,7 +40,7 @@ function mockAllSuccess() {
     success: true, data: [{ wallet_address: "w3", label: "whale", direction: "out" as const, amount_usd: 200000, token_address: "0x1", chain: "solana" }], error: null, cached: false, command: "",
   });
   vi.mocked(dex.getDexScreenerToken).mockResolvedValue({
-    success: true, data: { priceUsd: 0.00034, liquidityUsd: 50000, volume24hUsd: 120000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-12-01T00:00:00Z", imageUrl: null }, error: null, cached: false,
+    success: true, data: { priceUsd: 0.00034, liquidityUsd: 50000, volume24hUsd: 120000, priceChangeH1: -3.5, priceChangeH6: -8.1, priceChangeH24: -12.4, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-12-01T00:00:00Z", imageUrl: null }, error: null, cached: false,
   });
   vi.mocked(goplus.checkTokenSecurity).mockResolvedValue({
     success: true, data: { safe: false, reasons: ["balance mutable authority active"] }, cached: false,
@@ -119,7 +119,7 @@ describe("buildBearOpeningPrompt", () => {
     holders: [{ wallet_address: "w1", label: "whale", amount_token: 1000000, amount_usd: 500000, pct_of_supply: 78 }],
     smDexTrades: null,
     tokenFlows: null,
-    dexScreener: { priceUsd: 0.00034, liquidityUsd: 50000, volume24hUsd: 120000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-12-01T00:00:00Z", imageUrl: null },
+    dexScreener: { priceUsd: 0.00034, liquidityUsd: 50000, volume24hUsd: 120000, priceChangeH1: -3.5, priceChangeH6: -8.1, priceChangeH24: -12.4, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-12-01T00:00:00Z", imageUrl: null },
     security: { safe: false, reasons: ["balance mutable authority active"] },
   };
 

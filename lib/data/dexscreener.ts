@@ -13,8 +13,9 @@ interface DexScreenerPair {
   baseToken: { address: string; symbol: string };
   quoteToken: { address: string; symbol: string };
   priceUsd: string | null;
+  priceChange?: { h1?: number; h6?: number; h24?: number };
   liquidity?: { usd: number | null };
-  volume?: { h24: number | null };
+  volume?: { h1?: number; h6?: number; h24?: number };
   fdv?: number | null;
   marketCap?: number | null;
   pairCreatedAt?: number | null;
@@ -89,6 +90,9 @@ export async function getDexScreenerToken(
       priceUsd: parseFloat(best.priceUsd ?? "0"),
       liquidityUsd: totalLiquidityUsd,
       volume24hUsd: totalVolume24hUsd,
+      priceChangeH1: best.priceChange?.h1 ?? null,
+      priceChangeH6: best.priceChange?.h6 ?? null,
+      priceChangeH24: best.priceChange?.h24 ?? null,
       fdvUsd: best.fdv ?? null,
       marketCapUsd: best.marketCap ?? null,
       pairCreatedAt,

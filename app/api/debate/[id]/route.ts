@@ -14,6 +14,10 @@ interface TrialRow {
   chain: string;
   token_name: string | null;
   token_symbol: string | null;
+  token_icon_url: string | null;
+  price_usd: number | null;
+  mcap_usd: number | null;
+  liquidity_usd: number | null;
   status: string;
   verdict_score: number | null;
   verdict_label: string | null;
@@ -97,10 +101,24 @@ export async function GET(
         }
       };
 
+      // Helper: emit token stats if available
+      const emitTokenStats = () => {
+        if (trial.price_usd != null || trial.token_icon_url != null) {
+          enqueue({
+            type: "token_stats",
+            tokenIconUrl: trial.token_icon_url,
+            priceUsd: trial.price_usd,
+            mcapUsd: trial.mcap_usd,
+            liquidityUsd: trial.liquidity_usd,
+          } as DebateEvent);
+        }
+      };
+
       // ── Completed trial → replay all messages ───────────────────
       if (trial.status === "completed") {
         const messages = getStoredMessages(trialId);
         replayMessages(controller, encoder, messages);
+        emitTokenStats();
 
         // Emit verdict
         if (trial.verdict_score !== null) {
@@ -124,6 +142,7 @@ export async function GET(
       if (trial.status === "error") {
         const messages = getStoredMessages(trialId);
         replayMessages(controller, encoder, messages);
+        emitTokenStats();
         enqueue({
           type: "error",
           message: trial.error_message ?? "Unknown error",
@@ -140,6 +159,7 @@ export async function GET(
         // Replay already-completed messages from DB
         const messages = getStoredMessages(trialId);
         replayMessages(controller, encoder, messages);
+        emitTokenStats();
 
         // Join the live stream
         const listener = (event: DebateEvent) => {
