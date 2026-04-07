@@ -28,19 +28,19 @@ import type { BullData } from "@/lib/agents/types";
 
 function mockAllSuccess() {
   vi.mocked(endpoints.getSmNetflow).mockResolvedValue({
-    success: true, data: [{ token_address: "0x1", token_symbol: "TEST", chain: "solana", net_flow_usd: 2400000, inflow_usd: 3000000, outflow_usd: 600000, wallet_count: 15 }], error: null, cached: false, command: "",
+    success: true, data: [{ token_address: "0x1", token_symbol: "TEST", chain: "solana", market_cap_usd: 30000000, net_flow_1h_usd: 100000, net_flow_24h_usd: 2400000, net_flow_7d_usd: 5000000, net_flow_30d_usd: 8000000, trader_count: 15, token_age_days: 180, token_sectors: [] }], error: null, cached: false, command: "",
   });
   vi.mocked(endpoints.getWhoBoughtSold).mockResolvedValue({
-    success: true, data: [{ wallet_address: "wallet1", sm_label: "Smart Money", direction: "buy" as const, amount_usd: 50000, token_address: "0x1", token_symbol: "TEST", chain: "solana", traded_at: "2025-01-01" }], error: null, cached: false, command: "",
+    success: true, data: [{ address: "wallet1", address_label: "Smart Money", bought_token_volume: 50000, bought_volume_usd: 50000, sold_token_volume: 0, sold_volume_usd: 0, token_trade_volume: 50000, trade_volume_usd: 50000 }], error: null, cached: false, command: "",
   });
   vi.mocked(endpoints.getTokenFlowIntelligence).mockResolvedValue({
-    success: true, data: { token_address: "0x1", token_symbol: "TEST", chain: "solana", smart_money_inflow_usd: 3000000, smart_money_outflow_usd: 600000, retail_inflow_usd: 1000000, retail_outflow_usd: 500000, net_flow_usd: 2900000 }, error: null, cached: false, command: "",
+    success: true, data: { exchange_net_flow_usd: -500000, exchange_avg_flow_usd: 100000, exchange_wallet_count: 5, fresh_wallets_net_flow_usd: 1000000, fresh_wallets_avg_flow_usd: 200000, fresh_wallets_wallet_count: 10, public_figure_net_flow_usd: 0, public_figure_avg_flow_usd: 0, public_figure_wallet_count: 0, smart_trader_net_flow_usd: 2400000, smart_trader_avg_flow_usd: 160000, smart_trader_wallet_count: 15, top_pnl_net_flow_usd: 500000, top_pnl_avg_flow_usd: 50000, top_pnl_wallet_count: 10, whale_net_flow_usd: 300000, whale_avg_flow_usd: 100000, whale_wallet_count: 3 }, error: null, cached: false, command: "",
   });
   vi.mocked(endpoints.getProfilerPnlSummary).mockResolvedValue({
-    success: true, data: { wallet_address: "wallet1", total_pnl_usd: 500000, win_rate: 0.72, total_trades: 150, avg_trade_pnl_usd: 3333, best_trade_pnl_usd: 50000, worst_trade_pnl_usd: -10000 }, error: null, cached: false, command: "",
+    success: true, data: { realized_pnl_usd: 500000, realized_pnl_percent: 72, win_rate: 0.72, traded_times: 150, traded_token_count: 45, top5_tokens: [] }, error: null, cached: false, command: "",
   });
   vi.mocked(dex.getDexScreenerToken).mockResolvedValue({
-    success: true, data: { priceUsd: 0.00034, liquidityUsd: 500000, volume24hUsd: 1200000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-06-01T00:00:00Z" }, error: null, cached: false,
+    success: true, data: { priceUsd: 0.00034, liquidityUsd: 500000, volume24hUsd: 1200000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-06-01T00:00:00Z", imageUrl: null }, error: null, cached: false,
   });
   vi.mocked(jup.getJupiterPrice).mockResolvedValue({
     success: true, data: { usdPrice: 0.00034, priceChange24h: 15.2 }, error: null, cached: false,
@@ -99,11 +99,11 @@ describe("fetchBullData", () => {
 
 describe("buildBullOpeningPrompt", () => {
   const sampleData: BullData = {
-    smNetflow: [{ token_address: "0x1", token_symbol: "TEST", chain: "solana", net_flow_usd: 2400000, inflow_usd: 3000000, outflow_usd: 600000, wallet_count: 15 }],
-    whoBought: [{ wallet_address: "w1", sm_label: "SM", direction: "buy", amount_usd: 50000, token_address: "0x1", token_symbol: "TEST", chain: "solana", traded_at: "2025-01-01" }],
+    smNetflow: [{ token_address: "0x1", token_symbol: "TEST", chain: "solana", market_cap_usd: 30000000, net_flow_1h_usd: 100000, net_flow_24h_usd: 2400000, net_flow_7d_usd: 5000000, net_flow_30d_usd: 8000000, trader_count: 15, token_age_days: 180, token_sectors: [] }],
+    whoBought: [{ address: "w1", address_label: "SM", bought_token_volume: 50000, bought_volume_usd: 50000, sold_token_volume: 0, sold_volume_usd: 0, token_trade_volume: 50000, trade_volume_usd: 50000 }],
     flowIntelligence: null,
     profilerPnl: null,
-    dexScreener: { priceUsd: 0.00034, liquidityUsd: 500000, volume24hUsd: 1200000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-06-01T00:00:00Z" },
+    dexScreener: { priceUsd: 0.00034, liquidityUsd: 500000, volume24hUsd: 1200000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-06-01T00:00:00Z", imageUrl: null },
     jupiterPrice: { usdPrice: 0.00034, priceChange24h: 15.2 },
   };
 

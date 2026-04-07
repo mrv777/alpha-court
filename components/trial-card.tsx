@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { timeAgo } from "@/lib/utils";
@@ -6,6 +7,7 @@ interface TrialCardProps {
   id: string;
   tokenSymbol: string | null;
   tokenName: string | null;
+  tokenIconUrl: string | null;
   chain: string;
   verdictLabel: string | null;
   verdictScore: number | null;
@@ -73,6 +75,7 @@ export function TrialCard({
   id,
   tokenSymbol,
   tokenName,
+  tokenIconUrl,
   chain,
   verdictLabel,
   verdictScore,
@@ -87,19 +90,41 @@ export function TrialCard({
     <Link
       href={`/trial/${id}`}
       className={cn(
-        "group block rounded-lg border p-4 transition-all",
-        "bg-court-surface hover:bg-court-border/50",
+        "group relative block overflow-hidden rounded-xl border p-4 transition-all",
+        "bg-white/[0.02] backdrop-blur-sm hover:bg-white/[0.04]",
         colors.border,
         colors.glow,
         "hover:scale-[1.02]"
       )}
     >
+      {/* Top edge highlight */}
+      {isComplete && verdictLabel && (
+        <div className={cn(
+          "absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent",
+          (verdictLabel === "STRONG BUY" || verdictLabel === "BUY") && "via-bull/50",
+          (verdictLabel === "STRONG SELL" || verdictLabel === "SELL") && "via-bear/50",
+          verdictLabel === "HOLD" && "via-court-text-dim/30",
+        )} />
+      )}
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate font-medium text-court-text">{displaySymbol}</p>
-          {tokenName && (
-            <p className="truncate text-xs text-court-text-dim">{tokenName}</p>
+        <div className="flex items-center gap-2.5 min-w-0">
+          {tokenIconUrl ? (
+            <Image
+              src={tokenIconUrl}
+              alt={displaySymbol}
+              width={28}
+              height={28}
+              className="rounded-full shrink-0"
+            />
+          ) : (
+            <div className="size-7 rounded-full bg-court-border shrink-0" />
           )}
+          <div className="min-w-0">
+            <p className="truncate font-medium text-court-text">{displaySymbol}</p>
+            {tokenName && (
+              <p className="truncate text-xs text-court-text-dim">{tokenName}</p>
+            )}
+          </div>
         </div>
         <span className="text-xs uppercase text-court-text-dim">{chain}</span>
       </div>

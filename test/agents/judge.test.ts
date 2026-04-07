@@ -27,27 +27,27 @@ function mockAllSuccess() {
   vi.mocked(endpoints.getTokenInfo).mockResolvedValue({
     success: true,
     data: {
-      token_address: "0x1", token_symbol: "TEST", token_name: "TestToken", chain: "solana",
-      market_cap_usd: 30000000, liquidity_usd: 500000, volume_24h_usd: 1200000,
-      holder_count: 12000, top_10_holder_pct: 45, created_at: "2024-06-01",
+      contract_address: "0x1", symbol: "TEST", name: "TestToken",
+      logo: null, spot_metrics: { volume_total_usd: 1200000, buy_volume_usd: 700000, sell_volume_usd: 500000, total_trades: 5000 },
+      token_details: { token_deployment_date: "2024-06-01", website: null, x: null, telegram: null, market_cap: 30000000 },
     },
     error: null, cached: false, command: "",
   });
   vi.mocked(endpoints.getTokenOhlcv).mockResolvedValue({
     success: true,
     data: [
-      { timestamp: "2025-01-01", open: 0.0003, high: 0.00035, low: 0.00028, close: 0.00034, volume: 1200000 },
+      { interval_start: "2025-01-01", open: 0.0003, high: 0.00035, low: 0.00028, close: 0.00034, volume: 1200000, volume_usd: 1200000, market_cap: null },
     ],
     error: null, cached: false, command: "",
   });
   vi.mocked(endpoints.getWhoBoughtSold).mockResolvedValue({
     success: true,
-    data: [{ wallet_address: "w1", sm_label: "SM", direction: "sell" as const, amount_usd: 75000, token_address: "0x1", token_symbol: "TEST", chain: "solana", traded_at: "2025-01-02" }],
+    data: [{ address: "w1", address_label: "SM", bought_token_volume: 0, bought_volume_usd: 0, sold_token_volume: 75000, sold_volume_usd: 75000, token_trade_volume: 75000, trade_volume_usd: 75000 }],
     error: null, cached: false, command: "",
   });
   vi.mocked(endpoints.getProfilerPnlSummary).mockResolvedValue({
     success: true,
-    data: { wallet_address: "w1", total_pnl_usd: 250000, win_rate: 0.65, total_trades: 80, avg_trade_pnl_usd: 3125, best_trade_pnl_usd: 40000, worst_trade_pnl_usd: -15000 },
+    data: { realized_pnl_usd: 250000, realized_pnl_percent: 65, win_rate: 0.65, traded_times: 80, traded_token_count: 30, top5_tokens: [] },
     error: null, cached: false, command: "",
   });
 }
@@ -104,11 +104,11 @@ describe("fetchJudgeData", () => {
 describe("buildJudgeCrossExamPrompt", () => {
   const sampleData: JudgeData = {
     tokenInfo: {
-      token_address: "0x1", token_symbol: "TEST", token_name: "TestToken", chain: "solana",
-      market_cap_usd: 30000000, liquidity_usd: 500000, volume_24h_usd: 1200000,
-      holder_count: 12000, top_10_holder_pct: 45, created_at: "2024-06-01",
+      contract_address: "0x1", symbol: "TEST", name: "TestToken",
+      logo: null, spot_metrics: { volume_total_usd: 1200000, buy_volume_usd: 700000, sell_volume_usd: 500000, total_trades: 5000 },
+      token_details: { token_deployment_date: "2024-06-01", website: null, x: null, telegram: null, market_cap: 30000000 },
     },
-    ohlcv: [{ timestamp: "2025-01-01", open: 0.0003, high: 0.00035, low: 0.00028, close: 0.00034, volume: 1200000 }],
+    ohlcv: [{ interval_start: "2025-01-01", open: 0.0003, high: 0.00035, low: 0.00028, close: 0.00034, volume: 1200000, volume_usd: 1200000, market_cap: null }],
     whoSold: null,
     profilerPnl: null,
   };

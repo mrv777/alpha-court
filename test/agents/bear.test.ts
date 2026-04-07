@@ -28,19 +28,19 @@ import type { BearData } from "@/lib/agents/types";
 
 function mockAllSuccess() {
   vi.mocked(endpoints.getTokenDexTrades).mockResolvedValue({
-    success: true, data: [{ tx_hash: "tx1", wallet_address: "w1", token_address: "0x1", token_symbol: "TEST", chain: "solana", direction: "sell" as const, amount_usd: 25000, traded_at: "2025-01-01" }], error: null, cached: false, command: "",
+    success: true, data: [{ transaction_hash: "tx1", trader_address: "w1", trader_address_label: "whale", chain: "solana", token_bought_address: "0x1", token_bought_symbol: "TEST", token_bought_amount: 1000, token_sold_address: "0x2", token_sold_symbol: "USDC", token_sold_amount: 25000, trade_value_usd: 25000, block_timestamp: "2025-01-01" }], error: null, cached: false, command: "",
   });
   vi.mocked(endpoints.getTokenHolders).mockResolvedValue({
     success: true, data: [{ wallet_address: "w1", label: "whale", amount_token: 1000000, amount_usd: 500000, pct_of_supply: 12.5 }], error: null, cached: false, command: "",
   });
   vi.mocked(endpoints.getSmDexTrades).mockResolvedValue({
-    success: true, data: [{ wallet_address: "w2", sm_label: "Smart Money", token_address: "0x1", token_symbol: "TEST", chain: "solana", direction: "sell" as const, amount_usd: 100000, tx_hash: "tx2", traded_at: "2025-01-02" }], error: null, cached: false, command: "",
+    success: true, data: [{ trader_address: "w2", trader_address_label: "Smart Money", chain: "solana", token_bought_address: "0x2", token_bought_symbol: "USDC", token_bought_amount: 100000, token_bought_fdv: null, token_bought_market_cap: null, token_bought_age_days: 1000, token_sold_address: "0x1", token_sold_symbol: "TEST", token_sold_amount: 500000, token_sold_fdv: 45000000, token_sold_market_cap: 30000000, token_sold_age_days: 180, trade_value_usd: 100000, transaction_hash: "tx2", block_timestamp: "2025-01-02" }], error: null, cached: false, command: "",
   });
   vi.mocked(endpoints.getTokenFlows).mockResolvedValue({
     success: true, data: [{ wallet_address: "w3", label: "whale", direction: "out" as const, amount_usd: 200000, token_address: "0x1", chain: "solana" }], error: null, cached: false, command: "",
   });
   vi.mocked(dex.getDexScreenerToken).mockResolvedValue({
-    success: true, data: { priceUsd: 0.00034, liquidityUsd: 50000, volume24hUsd: 120000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-12-01T00:00:00Z" }, error: null, cached: false,
+    success: true, data: { priceUsd: 0.00034, liquidityUsd: 50000, volume24hUsd: 120000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-12-01T00:00:00Z", imageUrl: null }, error: null, cached: false,
   });
   vi.mocked(goplus.checkTokenSecurity).mockResolvedValue({
     success: true, data: { safe: false, reasons: ["balance mutable authority active"] }, cached: false,
@@ -115,11 +115,11 @@ describe("fetchBearData", () => {
 
 describe("buildBearOpeningPrompt", () => {
   const sampleData: BearData = {
-    dexTrades: [{ tx_hash: "tx1", wallet_address: "w1", token_address: "0x1", token_symbol: "TEST", chain: "solana", direction: "sell", amount_usd: 25000, traded_at: "2025-01-01" }],
+    dexTrades: [{ transaction_hash: "tx1", trader_address: "w1", trader_address_label: "whale", chain: "solana", token_bought_address: "0x1", token_bought_symbol: "TEST", token_bought_amount: 1000, token_sold_address: "0x2", token_sold_symbol: "USDC", token_sold_amount: 25000, trade_value_usd: 25000, block_timestamp: "2025-01-01" }],
     holders: [{ wallet_address: "w1", label: "whale", amount_token: 1000000, amount_usd: 500000, pct_of_supply: 78 }],
     smDexTrades: null,
     tokenFlows: null,
-    dexScreener: { priceUsd: 0.00034, liquidityUsd: 50000, volume24hUsd: 120000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-12-01T00:00:00Z" },
+    dexScreener: { priceUsd: 0.00034, liquidityUsd: 50000, volume24hUsd: 120000, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-12-01T00:00:00Z", imageUrl: null },
     security: { safe: false, reasons: ["balance mutable authority active"] },
   };
 

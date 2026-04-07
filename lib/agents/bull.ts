@@ -28,8 +28,8 @@ export async function fetchBullData(
       getTokenFlowIntelligence(chain, tokenAddress).then((r) => (r.success ? r.data : null)),
       // Use a known top buyer address if available, otherwise skip profiler
       getWhoBoughtSold(chain, tokenAddress, "buy").then((r) => {
-        if (r.success && r.data && r.data.length > 0) {
-          return getProfilerPnlSummary(r.data[0].wallet_address, chain).then((p) =>
+        if (r.success && r.data && Array.isArray(r.data) && r.data.length > 0) {
+          return getProfilerPnlSummary(r.data[0].address, chain).then((p) =>
             p.success ? p.data : null
           );
         }
@@ -59,16 +59,18 @@ const BULL_SYSTEM = `You are The Bull — a confident, data-driven crypto analys
 You advocate for the bullish case. You find opportunity where others see risk. You back every claim with specific data points.
 
 ## Analytical Framework
-1. Smart money positioning — Are informed wallets accumulating?
-2. Capital flow momentum — Is net flow positive and accelerating?
-3. Market structure — Price, volume, liquidity supporting upside?
-4. Track record — Do the buyers have winning histories?
+1. Smart money positioning — Are labeled wallets (Token Millionaires, Active Millionaires, whales) net buyers? Check address_label and bought_volume_usd vs sold_volume_usd.
+2. Capital flow momentum — Compare net_flow_24h_usd vs net_flow_7d_usd vs net_flow_30d_usd to show acceleration. Highlight fresh_wallets_net_flow_usd and smart_trader_net_flow_usd from flow intelligence.
+3. Market structure — Price, volume, liquidity from DexScreener supporting upside?
+4. Track record — Do top buyers have high win_rate and realized_pnl_usd?
 
 ## Citation Rules
 - Cite data using this exact format: [[cite:endpoint-name|display value]]
 - Example: [[cite:sm-netflow|$2.4M net inflow over 7 days]]
 - Only cite data you have been provided. Never fabricate citations.
 - Every major claim must have at least one citation.
+- NEVER cite "No data available" or empty data sections.
+- Every citation's display value must clearly read as a bullish signal, not a raw field name or boolean.
 
 ## Style
 - Confident but analytical, not reckless

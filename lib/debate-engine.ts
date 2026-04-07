@@ -97,6 +97,12 @@ function setTrialError(trialId: string, message: string): void {
     .run(message, trialId);
 }
 
+function updateTrialIconUrl(trialId: string, iconUrl: string): void {
+  getDb()
+    .prepare("UPDATE trials SET token_icon_url = ? WHERE id = ?")
+    .run(iconUrl, trialId);
+}
+
 function persistMessage(
   trialId: string,
   agent: AgentRole | "system",
@@ -211,9 +217,13 @@ async function streamAgentWithRetry(
   }
 }
 
+const JUNK_EVIDENCE_RE = /^(no data|no data available[^)]*|n\/a|null|undefined|safe[= ]*(true)?|true|false)$/i;
+
 function extractEvidence(content: string): Array<{ endpoint: string; displayValue: string }> {
   const { citations } = parseCitations(content);
-  return citations.map((c) => ({ endpoint: c.endpoint, displayValue: c.displayValue }));
+  return citations
+    .filter((c) => !JUNK_EVIDENCE_RE.test(c.displayValue.trim()))
+    .map((c) => ({ endpoint: c.endpoint, displayValue: c.displayValue }));
 }
 
 // ── Data fetching helpers ─────────────────────────────────────────────
@@ -323,6 +333,12 @@ export async function runDebate(
     }
 
     emit({ type: "phase", phase: "gathering", status: "complete" });
+
+    // Persist token icon URL from DexScreener (either side has it)
+    const iconUrl = bullData.dexScreener?.imageUrl ?? bearData.dexScreener?.imageUrl;
+    if (iconUrl) {
+      updateTrialIconUrl(trialId, iconUrl);
+    }
 
     // ── Phase 2: Opening Statements (parallel) ──────────────────────
     emit({ type: "phase", phase: "opening", status: "start" });

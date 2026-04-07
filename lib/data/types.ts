@@ -6,6 +6,7 @@ export interface DexScreenerTokenData {
   fdvUsd: number | null;
   marketCapUsd: number | null;
   pairCreatedAt: string | null;
+  imageUrl: string | null;
 }
 
 export interface DexScreenerResult {

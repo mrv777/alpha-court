@@ -26,8 +26,8 @@ export async function fetchJudgeData(
     getWhoBoughtSold(chain, tokenAddress, "sell").then((r) => (r.success ? r.data : null)),
     // Use a known top seller address if available, otherwise skip profiler
     getWhoBoughtSold(chain, tokenAddress, "sell").then((r) => {
-      if (r.success && r.data && r.data.length > 0) {
-        return getProfilerPnlSummary(r.data[0].wallet_address, chain).then((p) =>
+      if (r.success && r.data && Array.isArray(r.data) && r.data.length > 0) {
+        return getProfilerPnlSummary(r.data[0].address, chain).then((p) =>
           p.success ? p.data : null
         );
       }

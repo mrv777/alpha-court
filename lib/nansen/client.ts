@@ -67,6 +67,7 @@ async function execNansenCli(command: string): Promise<string> {
  * Parse CLI JSON output. Handles:
  * - Non-JSON prefix (progress bars, warnings) before the JSON body
  * - Nansen { success, data } wrapper — unwraps to inner payload
+ * - Double-nested { data: { data: [...], pagination } } — unwraps inner data
  */
 export function parseCliOutput<T>(raw: string): T {
   const jsonStart = raw.indexOf("{");
@@ -95,7 +96,15 @@ export function parseCliOutput<T>(raw: string): T {
     }
     // Unwrap { success, data } wrapper
     if ("data" in parsed) {
-      return parsed.data as T;
+      let inner = parsed.data;
+
+      // Many Nansen endpoints double-nest: { data: { data: [...], pagination } }
+      // Unwrap the inner .data when present (but not for search which uses .tokens)
+      if (inner && typeof inner === "object" && !Array.isArray(inner) && "data" in inner) {
+        inner = inner.data;
+      }
+
+      return inner as T;
     }
   }
 

@@ -80,6 +80,13 @@ function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_debate_messages_trial ON debate_messages(trial_id, sequence);
     CREATE INDEX IF NOT EXISTS idx_nansen_cache_key ON nansen_cache(cache_key);
   `);
+
+  // Migrations for columns added after initial schema
+  try {
+    db.exec(`ALTER TABLE trials ADD COLUMN token_icon_url TEXT`);
+  } catch {
+    // Column already exists — ignore
+  }
 }
 
 /** Close database connection (useful for tests) */

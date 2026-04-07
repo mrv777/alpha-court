@@ -18,6 +18,7 @@ interface DexScreenerPair {
   fdv?: number | null;
   marketCap?: number | null;
   pairCreatedAt?: number | null;
+  info?: { imageUrl?: string; header?: string };
 }
 
 /**
@@ -78,6 +79,12 @@ export async function getDexScreenerToken(
       ? new Date(createdAtMs).toISOString()
       : null;
 
+    // Find image URL from the best pair or any pair that has it
+    const imageUrl =
+      best.info?.imageUrl ??
+      pairs.find((p) => p.info?.imageUrl)?.info?.imageUrl ??
+      null;
+
     const data: DexScreenerTokenData = {
       priceUsd: parseFloat(best.priceUsd ?? "0"),
       liquidityUsd: totalLiquidityUsd,
@@ -85,6 +92,7 @@ export async function getDexScreenerToken(
       fdvUsd: best.fdv ?? null,
       marketCapUsd: best.marketCap ?? null,
       pairCreatedAt,
+      imageUrl,
     };
 
     // Store in cache

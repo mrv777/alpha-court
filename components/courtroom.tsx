@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { Scale } from "lucide-react";
+import { X } from "lucide-react";
 import { AgentPanel, AgentPanelCompact } from "@/components/agent-panel";
 import { DebateStream } from "@/components/debate-stream";
 import { DataProgressGrid } from "@/components/data-progress";
@@ -23,6 +24,7 @@ interface CourtroomProps {
   trialId: string;
   tokenName: string;
   tokenSymbol: string | null;
+  tokenIconUrl?: string | null;
   chain: string;
   state: DebateStreamState;
 }
@@ -31,10 +33,12 @@ export function Courtroom({
   trialId,
   tokenName,
   tokenSymbol,
+  tokenIconUrl,
   chain,
   state,
 }: CourtroomProps) {
   const { messages, phase, verdict, isStreaming, error, dataProgress } = state;
+  const [showVerdict, setShowVerdict] = useState(true);
 
   // Collect evidence per agent from completed messages
   const evidenceByAgent = useMemo(() => {
@@ -67,7 +71,13 @@ export function Courtroom({
       {/* Header */}
       <header className="flex items-center justify-between border-b border-court-border px-4 py-3 shrink-0">
         <div className="flex items-center gap-3">
-          <Scale className="size-5 text-judge" />
+          <Image
+            src={tokenIconUrl || "/logo.png"}
+            alt={tokenIconUrl ? displayName ?? "Token" : "Alpha Court"}
+            width={24}
+            height={24}
+            className={cn("shrink-0", tokenIconUrl ? "rounded-full" : "rounded")}
+          />
           <div>
             <h1 className="text-sm font-bold text-court-text">
               {displayName}
@@ -76,24 +86,47 @@ export function Courtroom({
           </div>
         </div>
 
-        {/* Phase indicator */}
-        {phase && (
-          <div className="flex items-center gap-2">
-            {isStreaming && (
-              <span className="size-2 rounded-full bg-bull animate-pulse" />
-            )}
-            <span className="text-xs font-semibold uppercase tracking-wider text-court-text-muted">
-              {PHASE_LABELS[phase]}
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Phase indicator */}
+          {phase && (
+            <div className="flex items-center gap-2">
+              {isStreaming && (
+                <span className="size-2 rounded-full bg-bull animate-pulse" />
+              )}
+              <span className="text-xs font-semibold uppercase tracking-wider text-court-text-muted">
+                {PHASE_LABELS[phase]}
+              </span>
+            </div>
+          )}
+
+          {/* Show verdict button when verdict exists but modal is closed */}
+          {verdict && !showVerdict && (
+            <button
+              onClick={() => setShowVerdict(true)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold",
+                "border border-judge/30 bg-judge/[0.1] text-judge",
+                "hover:bg-judge/[0.2] transition-colors"
+              )}
+            >
+              <span className="size-1.5 rounded-full bg-judge" />
+              View Verdict
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Preparing state */}
       {showPreparing && (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <Scale className="size-8 text-judge/50 mx-auto mb-3 animate-pulse" />
+            <Image
+              src="/logo.png"
+              alt="Alpha Court"
+              width={40}
+              height={40}
+              className="rounded-lg mx-auto mb-3 animate-pulse opacity-50"
+            />
             <p className="text-sm text-court-text-muted">Preparing trial...</p>
             <p className="text-xs text-court-text-dim mt-1">
               {displayName} on {chain}
@@ -113,7 +146,7 @@ export function Courtroom({
       {(messages.length > 0 || (phase && phase !== "gathering")) && (
         <div className="flex-1 min-h-0 flex flex-col">
           {/* Mobile: compact agent cards */}
-          <div className="lg:hidden flex gap-2 px-4 pt-3 shrink-0 overflow-x-auto">
+          <div className="lg:hidden flex gap-2 px-4 pt-3 shrink-0 overflow-x-auto scrollbar-none">
             <AgentPanelCompact
               agent="bull"
               evidence={evidenceByAgent.bull}
@@ -159,11 +192,17 @@ export function Courtroom({
             </aside>
           </div>
 
-          {/* Judge bar — visible when judge has spoken */}
+          {/* Judge bar — visible when judge has spoken but no verdict yet */}
           {evidenceByAgent.judge.length > 0 && !verdict && (
             <div className="shrink-0 border-t border-judge/20 bg-judge/5 px-4 py-3">
               <div className="flex items-center gap-3">
-                <span className="text-base">⚖️</span>
+                <Image
+                  src="/judge-avatar.png"
+                  alt="The Judge"
+                  width={28}
+                  height={28}
+                  className="rounded shrink-0"
+                />
                 <div className="flex-1 min-w-0">
                   <span className="text-xs font-bold text-judge">The Judge</span>
                   {evidenceByAgent.judge.length > 0 && (
@@ -177,19 +216,54 @@ export function Courtroom({
               </div>
             </div>
           )}
+        </div>
+      )}
 
-          {/* Verdict display — the climactic reveal */}
-          {verdict && (
-            <div className="shrink-0 border-t border-judge/20 bg-judge/5 px-4 py-6">
-              <div className="max-w-lg mx-auto flex flex-col items-center gap-4">
-                <VerdictDisplay
-                  verdict={verdict}
-                  tokenName={displayName}
-                />
-                <ShareButton trialId={trialId} />
-              </div>
+      {/* ── Verdict Modal Overlay ────────────────────────────────────── */}
+      {verdict && showVerdict && (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowVerdict(false);
+          }}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-court-bg/80 backdrop-blur-sm" />
+
+          {/* Modal content */}
+          <div className="relative z-10 w-full max-w-lg animate-in fade-in zoom-in-95 duration-300">
+            {/* Close button */}
+            <button
+              onClick={() => setShowVerdict(false)}
+              className="absolute -top-3 -right-3 z-20 size-8 rounded-full border border-court-border bg-court-surface flex items-center justify-center text-court-text-dim hover:text-court-text hover:bg-court-border transition-colors"
+              aria-label="Close verdict"
+            >
+              <X className="size-4" />
+            </button>
+
+            {/* Ceremonial header */}
+            <div className="flex items-center gap-3 justify-center mb-5">
+              <div className="flex-1 max-w-16 h-px bg-gradient-to-r from-transparent to-judge/30" />
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-judge/70">
+                The Court Has Ruled
+              </span>
+              <div className="flex-1 max-w-16 h-px bg-gradient-to-l from-transparent to-judge/30" />
             </div>
-          )}
+
+            <VerdictDisplay
+              verdict={verdict}
+              tokenName={displayName}
+            />
+
+            <div className="mt-6 flex justify-center">
+              <ShareButton trialId={trialId} />
+            </div>
+
+            {/* Dismiss hint */}
+            <p className="mt-4 text-center text-[11px] text-court-text-dim">
+              Click outside or press X to read the full transcript
+            </p>
+          </div>
         </div>
       )}
     </div>

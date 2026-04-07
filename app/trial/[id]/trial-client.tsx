@@ -11,6 +11,7 @@ interface TrialData {
   chain: string;
   token_name: string | null;
   token_symbol: string | null;
+  token_icon_url: string | null;
   status: string;
   error_message: string | null;
 }
@@ -27,15 +28,15 @@ export function TrialClient({ trial }: TrialClientProps) {
   return (
     <div className="flex flex-col h-[calc(100vh-0px)]">
       {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-court-border bg-court-bg shrink-0">
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-court-border bg-court-bg shrink-0 min-h-[44px]">
         <Link
           href="/"
-          className="text-court-text-dim hover:text-court-text transition-colors"
+          className="text-court-text-dim hover:text-court-text transition-colors p-1 -m-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label="Back to Alpha Court"
         >
           <ArrowLeft className="size-4" />
         </Link>
-        <span className="text-xs text-court-text-dim font-mono">
+        <span className="text-xs text-court-text-dim font-mono truncate">
           Trial {trial.id}
         </span>
 
@@ -56,6 +57,7 @@ export function TrialClient({ trial }: TrialClientProps) {
           trialId={trial.id}
           tokenName={tokenName}
           tokenSymbol={trial.token_symbol}
+          tokenIconUrl={trial.token_icon_url}
           chain={trial.chain}
           state={state}
         />

@@ -61,18 +61,24 @@ export function getWhoBoughtSold(
   });
 }
 
-/** Detailed flow by entity label */
-export function getTokenFlowIntelligence(
+/** Detailed flow by entity label — CLI returns a single-item array, unwrap it */
+export async function getTokenFlowIntelligence(
   chain: string,
   token: string
 ): Promise<NansenCliResult<TokenFlowIntelligence>> {
   const command = `research token flow-intelligence --token ${token} --chain ${chain}`;
-  return nansenCliCall(command, {
+  const result = await nansenCliCall<TokenFlowIntelligence[] | TokenFlowIntelligence>(command, {
     ttlSeconds: TTL.FLOW_INTELLIGENCE,
     chain,
     tokenAddress: token,
     params: { endpoint: "flow-intelligence", chain, token },
   });
+
+  // CLI returns a single-item array — unwrap to a flat object
+  if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+    return { ...result, data: result.data[0] };
+  }
+  return result as NansenCliResult<TokenFlowIntelligence>;
 }
 
 /** Win rate / PnL of a wallet */
@@ -180,14 +186,38 @@ export function getTokenOhlcv(
 // ── Shared ──────────────────────────────────────────────────────────
 
 /** Token lookup / autocomplete */
-export function nansenSearch(
+export async function nansenSearch(
   query: string,
   chain: string
 ): Promise<NansenCliResult<SearchResult[]>> {
   const command = `research search --query "${query}" --chain ${chain}`;
-  return nansenCliCall(command, {
+
+  // The CLI returns { tokens: [...], entities: [], total_results } with different field names
+  const result = await nansenCliCall<{
+    tokens?: Array<{
+      address: string;
+      symbol: string;
+      name: string;
+      chain: string;
+      market_cap?: number | null;
+    }>;
+  }>(command, {
     ttlSeconds: TTL.SEARCH,
     chain,
     params: { endpoint: "search", query, chain },
   });
+
+  if (!result.success || !result.data?.tokens) {
+    return { success: false, data: null, error: result.error, cached: result.cached, command };
+  }
+
+  const mapped: SearchResult[] = result.data.tokens.map((t) => ({
+    token_address: t.address,
+    token_symbol: t.symbol,
+    token_name: t.name,
+    chain: t.chain,
+    market_cap_usd: t.market_cap ?? null,
+  }));
+
+  return { success: true, data: mapped, error: null, cached: result.cached, command };
 }
