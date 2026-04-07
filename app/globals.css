@@ -144,6 +144,30 @@
   to { --border-angle: 360deg; }
 }
 
+/* ── Dark scrollbar styling ────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1e1e2e transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #1e1e2e;
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #2a2a3a;
+}
+
 @layer utilities {
   .scrollbar-none {
     -ms-overflow-style: none;

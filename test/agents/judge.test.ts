@@ -133,14 +133,6 @@ describe("buildJudgeCrossExamPrompt", () => {
     expect(user).toContain("Top Seller PnL Profile");
   });
 
-  it("includes citation instructions in system prompt", () => {
-    const { system } = buildJudgeCrossExamPrompt(
-      sampleData, "bo", "beo", "br", "ber"
-    );
-    expect(system).toContain("[[cite:");
-    expect(system).toContain("Never fabricate citations");
-  });
-
   it("includes word target", () => {
     const { user } = buildJudgeCrossExamPrompt(
       sampleData, "bo", "beo", "br", "ber"

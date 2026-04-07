@@ -19,6 +19,7 @@ interface DebateStreamProps {
   phase: DebatePhase | null;
   isStreaming: boolean;
   error: string | null;
+  className?: string;
 }
 
 export function DebateStream({
@@ -26,6 +27,7 @@ export function DebateStream({
   phase,
   isStreaming,
   error,
+  className,
 }: DebateStreamProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
@@ -72,7 +74,7 @@ export function DebateStream({
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="flex-1 overflow-y-auto min-h-0 px-5 py-6 space-y-4"
+      className={cn("flex-1 overflow-y-auto min-h-0 px-5 py-6 space-y-4", className)}
     >
       {messages.length === 0 && !isStreaming && !error && (
         <div className="flex items-center justify-center h-full text-court-text-dim text-sm">

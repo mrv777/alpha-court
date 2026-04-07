@@ -101,8 +101,17 @@ export const DebateMessage = memo(function DebateMessage({
 }: DebateMessageProps) {
   const style = AGENT_STYLE[agent];
 
-  // Strip any [[cite:...]] markup (backward compat with old debates)
-  const cleanText = useMemo(() => parseCitations(content).cleanText, [content]);
+  // Strip citation markup + Grok internal tags + markdown ref links (backward compat)
+  const cleanText = useMemo(() => {
+    let text = parseCitations(content).cleanText;
+    // Strip Grok XML tags: <grok:render ...>, </grok:render>, <argument ...>, </argument>
+    text = text.replace(/<\/?(?:grok:\w+|argument)[^>]*>/g, "");
+    // Strip markdown reference links: [[1]](url) or [[1]]
+    text = text.replace(/\[\[\d+\]\](?:\([^)]*\))?/g, "");
+    // Clean up leftover whitespace from stripped content
+    text = text.replace(/  +/g, " ").trim();
+    return text;
+  }, [content]);
 
   return (
     <div
@@ -129,7 +138,7 @@ export const DebateMessage = memo(function DebateMessage({
       </div>
 
       {/* Message content with markdown */}
-      <div className="text-[15px] text-court-text/90 leading-[1.7]">
+      <div className="text-[15px] text-court-text/90 leading-[1.7] break-words">
         {renderInlineMarkdown(cleanText)}
         {isStreaming && (
           <span className="inline-block w-1.5 h-4 bg-court-text-muted/60 ml-0.5 animate-pulse rounded-sm align-text-bottom" />

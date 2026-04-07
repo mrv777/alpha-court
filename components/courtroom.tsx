@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AgentPanel, AgentPanelCompact } from "@/components/agent-panel";
 import { DebateStream } from "@/components/debate-stream";
+import { DebateMessage } from "@/components/debate-message";
 import { DataProgressGrid } from "@/components/data-progress";
 import { VerdictDisplay } from "@/components/verdict-display";
 import { ShareButton } from "@/components/share-button";
@@ -39,11 +38,23 @@ export function Courtroom({
   state,
 }: CourtroomProps) {
   const { messages, phase, verdict, isStreaming, error, dataProgress } = state;
-  const [showVerdict, setShowVerdict] = useState(true);
 
   const displayName = tokenSymbol ? `$${tokenSymbol}` : tokenName;
   const showGathering = phase === "gathering" || (dataProgress.length > 0 && messages.length === 0);
   const showPreparing = !phase && isStreaming && dataProgress.length === 0 && messages.length === 0;
+
+  // Split messages: debate stream vs verdict panel (only judge verdict phase)
+  const debateMessages = useMemo(
+    () => messages.filter((m) => !(m.agent === "judge" && m.phase === "verdict")),
+    [messages]
+  );
+  const verdictMessage = useMemo(
+    () => messages.find((m) => m.agent === "judge" && m.phase === "verdict") ?? null,
+    [messages]
+  );
+
+  const hasVerdictPanel = verdictMessage || verdict;
+  const hasDebate = debateMessages.length > 0 || (phase && phase !== "gathering");
 
   return (
     <div className="flex flex-col h-full">
@@ -76,21 +87,6 @@ export function Courtroom({
                 {PHASE_LABELS[phase]}
               </span>
             </div>
-          )}
-
-          {/* Show verdict button when verdict exists but modal is closed */}
-          {verdict && !showVerdict && (
-            <button
-              onClick={() => setShowVerdict(true)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold",
-                "border border-judge/30 bg-judge/[0.1] text-judge",
-                "hover:bg-judge/[0.2] transition-colors"
-              )}
-            >
-              <span className="size-1.5 rounded-full bg-judge" />
-              View Verdict
-            </button>
           )}
         </div>
       </header>
@@ -128,100 +124,47 @@ export function Courtroom({
         )}
       </AnimatePresence>
 
-      {/* Main courtroom content — only show once we have messages or are past gathering */}
-      {(messages.length > 0 || (phase && phase !== "gathering")) && (
-        <div className="flex-1 min-h-0 flex flex-col">
-          {/* Mobile: compact agent cards */}
-          <div className="lg:hidden flex gap-2 px-4 pt-3 shrink-0 overflow-x-auto scrollbar-none">
-            <AgentPanelCompact
-              agent="bull"
-              verdict={verdict}
-            />
-            <AgentPanelCompact
-              agent="bear"
-              verdict={verdict}
-            />
-          </div>
+      {/* Main content area */}
+      {hasDebate && (
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
+          {/* Debate stream (bull/bear + cross-exam) */}
+          <DebateStream
+            messages={debateMessages}
+            phase={phase}
+            isStreaming={isStreaming && !hasVerdictPanel}
+            error={error}
+            className={cn(hasVerdictPanel && "lg:border-r lg:border-court-border")}
+          />
 
-          {/* Desktop 3-column + Mobile center stream */}
-          <div className="flex-1 min-h-0 flex">
-            {/* Bull panel — desktop only */}
-            <aside className="hidden lg:flex w-64 xl:w-72 shrink-0 p-4">
-              <AgentPanel
-                agent="bull"
-                verdict={verdict}
-                className="w-full"
-              />
+          {/* Verdict panel — appears when verdict is ready */}
+          {hasVerdictPanel && (
+            <aside className="lg:w-[400px] xl:w-[440px] shrink-0 overflow-y-auto border-t lg:border-t-0 border-court-border">
+              <div className="p-5 space-y-5">
+                {/* Verdict scores */}
+                {verdict && (
+                  <>
+                    <VerdictDisplay
+                      verdict={verdict}
+                      tokenName={displayName}
+                    />
+                    <div className="flex justify-center">
+                      <ShareButton trialId={trialId} />
+                    </div>
+                  </>
+                )}
+
+                {/* Judge verdict text */}
+                {verdictMessage && (
+                  <DebateMessage
+                    agent={verdictMessage.agent}
+                    phase={verdictMessage.phase}
+                    content={verdictMessage.content}
+                    isStreaming={verdictMessage.isStreaming}
+                  />
+                )}
+              </div>
             </aside>
-
-            {/* Center debate stream */}
-            <main className="flex-1 min-w-0 flex flex-col border-x border-court-border">
-              <DebateStream
-                messages={messages}
-                phase={phase}
-                isStreaming={isStreaming}
-                error={error}
-              />
-            </main>
-
-            {/* Bear panel — desktop only */}
-            <aside className="hidden lg:flex w-64 xl:w-72 shrink-0 p-4">
-              <AgentPanel
-                agent="bear"
-                verdict={verdict}
-                className="w-full"
-              />
-            </aside>
-          </div>
-
-        </div>
-      )}
-
-      {/* ── Verdict Modal Overlay ────────────────────────────────────── */}
-      {verdict && showVerdict && (
-        <div
-          className="fixed inset-0 z-40 flex items-center justify-center p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowVerdict(false);
-          }}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-court-bg/80 backdrop-blur-sm" />
-
-          {/* Modal content */}
-          <div className="relative z-10 w-full max-w-lg animate-in fade-in zoom-in-95 duration-300">
-            {/* Close button */}
-            <button
-              onClick={() => setShowVerdict(false)}
-              className="absolute -top-3 -right-3 z-20 size-8 rounded-full border border-court-border bg-court-surface flex items-center justify-center text-court-text-dim hover:text-court-text hover:bg-court-border transition-colors"
-              aria-label="Close verdict"
-            >
-              <X className="size-4" />
-            </button>
-
-            {/* Ceremonial header */}
-            <div className="flex items-center gap-3 justify-center mb-5">
-              <div className="flex-1 max-w-16 h-px bg-gradient-to-r from-transparent to-judge/30" />
-              <span className="text-xs font-bold uppercase tracking-[0.2em] text-judge/70">
-                The Court Has Ruled
-              </span>
-              <div className="flex-1 max-w-16 h-px bg-gradient-to-l from-transparent to-judge/30" />
-            </div>
-
-            <VerdictDisplay
-              verdict={verdict}
-              tokenName={displayName}
-            />
-
-            <div className="mt-6 flex justify-center">
-              <ShareButton trialId={trialId} />
-            </div>
-
-            {/* Dismiss hint */}
-            <p className="mt-4 text-center text-[11px] text-court-text-dim">
-              Click outside or press X to read the full transcript
-            </p>
-          </div>
+          )}
         </div>
       )}
     </div>

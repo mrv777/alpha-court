@@ -122,12 +122,6 @@ describe("buildBullOpeningPrompt", () => {
     expect(user).toContain("Top Buyer PnL Profile");
   });
 
-  it("includes citation instructions in system prompt", () => {
-    const { system } = buildBullOpeningPrompt(sampleData, "TestToken");
-    expect(system).toContain("[[cite:");
-    expect(system).toContain("Never fabricate citations");
-  });
-
   it("includes word target", () => {
     const { user } = buildBullOpeningPrompt(sampleData, "TestToken");
     expect(user).toContain("200-300 words");
@@ -162,8 +156,4 @@ describe("buildBullRebuttalPrompt", () => {
     expect(user).toContain("150-200 words");
   });
 
-  it("includes citation instructions", () => {
-    const { system } = buildBullRebuttalPrompt(sampleData, "bear text");
-    expect(system).toContain("[[cite:");
-  });
 });

@@ -145,12 +145,6 @@ describe("buildBearOpeningPrompt", () => {
     expect(system).toContain("Security red flags");
   });
 
-  it("includes citation instructions in system prompt", () => {
-    const { system } = buildBearOpeningPrompt(sampleData, "TestToken");
-    expect(system).toContain("[[cite:");
-    expect(system).toContain("Never fabricate citations");
-  });
-
   it("includes word target", () => {
     const { user } = buildBearOpeningPrompt(sampleData, "TestToken");
     expect(user).toContain("200-300 words");
@@ -184,8 +178,4 @@ describe("buildBearRebuttalPrompt", () => {
     expect(user).toContain("150-200 words");
   });
 
-  it("includes citation instructions", () => {
-    const { system } = buildBearRebuttalPrompt(sampleData, "bull text");
-    expect(system).toContain("[[cite:");
-  });
 });
