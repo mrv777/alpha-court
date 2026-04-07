@@ -93,7 +93,6 @@ export function DebateStream({
               agent={msg.agent}
               phase={msg.phase}
               content={msg.content}
-              evidence={msg.evidence}
               isStreaming={msg.isStreaming}
             />
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
@@ -40,28 +40,6 @@ export function Courtroom({
 }: CourtroomProps) {
   const { messages, phase, verdict, isStreaming, error, dataProgress } = state;
   const [showVerdict, setShowVerdict] = useState(true);
-
-  // Collect evidence per agent from completed messages
-  const evidenceByAgent = useMemo(() => {
-    const bull: Array<{ endpoint: string; displayValue: string }> = [];
-    const bear: Array<{ endpoint: string; displayValue: string }> = [];
-    const judge: Array<{ endpoint: string; displayValue: string }> = [];
-    const seen = { bull: new Set<string>(), bear: new Set<string>(), judge: new Set<string>() };
-
-    for (const msg of messages) {
-      if (msg.isStreaming) continue;
-      const target = msg.agent === "bull" ? bull : msg.agent === "bear" ? bear : judge;
-      const seenSet = seen[msg.agent];
-      for (const e of msg.evidence) {
-        const key = `${e.endpoint}:${e.displayValue}`;
-        if (!seenSet.has(key)) {
-          seenSet.add(key);
-          target.push(e);
-        }
-      }
-    }
-    return { bull, bear, judge };
-  }, [messages]);
 
   const displayName = tokenSymbol ? `$${tokenSymbol}` : tokenName;
   const showGathering = phase === "gathering" || (dataProgress.length > 0 && messages.length === 0);
@@ -157,12 +135,10 @@ export function Courtroom({
           <div className="lg:hidden flex gap-2 px-4 pt-3 shrink-0 overflow-x-auto scrollbar-none">
             <AgentPanelCompact
               agent="bull"
-              evidence={evidenceByAgent.bull}
               verdict={verdict}
             />
             <AgentPanelCompact
               agent="bear"
-              evidence={evidenceByAgent.bear}
               verdict={verdict}
             />
           </div>
@@ -173,7 +149,6 @@ export function Courtroom({
             <aside className="hidden lg:flex w-64 xl:w-72 shrink-0 p-4">
               <AgentPanel
                 agent="bull"
-                evidence={evidenceByAgent.bull}
                 verdict={verdict}
                 className="w-full"
               />
@@ -193,37 +168,12 @@ export function Courtroom({
             <aside className="hidden lg:flex w-64 xl:w-72 shrink-0 p-4">
               <AgentPanel
                 agent="bear"
-                evidence={evidenceByAgent.bear}
                 verdict={verdict}
                 className="w-full"
               />
             </aside>
           </div>
 
-          {/* Judge bar — visible when judge has spoken but no verdict yet */}
-          {evidenceByAgent.judge.length > 0 && !verdict && (
-            <div className="shrink-0 border-t border-judge/20 bg-judge/5 px-4 py-3">
-              <div className="flex items-center gap-3">
-                <Image
-                  src="/judge-avatar.png"
-                  alt="The Judge"
-                  width={28}
-                  height={28}
-                  className="rounded shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs font-bold text-judge">The Judge</span>
-                  {evidenceByAgent.judge.length > 0 && (
-                    <p className="text-xs text-court-text-dim truncate font-mono">
-                      {evidenceByAgent.judge[0].displayValue}
-                      {evidenceByAgent.judge.length > 1 &&
-                        ` +${evidenceByAgent.judge.length - 1} more`}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
 

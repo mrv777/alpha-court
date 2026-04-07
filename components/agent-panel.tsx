@@ -56,14 +56,12 @@ const AGENT_CONFIG: Record<
 
 interface AgentPanelProps {
   agent: AgentRole;
-  evidence: Array<{ endpoint: string; displayValue: string }>;
   verdict: Verdict | null;
   className?: string;
 }
 
 export function AgentPanel({
   agent,
-  evidence,
   verdict,
   className,
 }: AgentPanelProps) {
@@ -106,37 +104,6 @@ export function AgentPanel({
         </div>
       </div>
 
-      {/* Evidence highlights */}
-      <div className="flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-court-text-muted mb-2 shrink-0">
-          Key Evidence
-          {evidence.length > 0 && (
-            <span className="text-court-text-dim font-normal ml-1.5">
-              ({evidence.length})
-            </span>
-          )}
-        </h4>
-        {evidence.length > 0 ? (
-          <ul className="space-y-2 overflow-y-auto scrollbar-none flex-1 min-h-0 [mask-image:linear-gradient(to_bottom,black_calc(100%-20px),transparent)]">
-            {evidence.slice(0, 10).map((e, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-1.5 text-xs text-court-text-muted"
-              >
-                <span className={cn("mt-0.5 shrink-0", config.color)}>•</span>
-                <span className="font-mono leading-tight break-all line-clamp-2">
-                  {e.displayValue}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs text-court-text-dim italic">
-            Awaiting data...
-          </p>
-        )}
-      </div>
-
       {/* Conviction meter — hidden until verdict */}
       {conviction !== null && (
         <div>
@@ -164,7 +131,6 @@ export function AgentPanel({
 /** Compact card variant for mobile */
 export function AgentPanelCompact({
   agent,
-  evidence,
   verdict,
 }: AgentPanelProps) {
   const config = AGENT_CONFIG[agent];
@@ -193,12 +159,6 @@ export function AgentPanelCompact({
         <span className={cn("text-xs font-bold", config.color)}>
           {config.label}
         </span>
-        {evidence.length > 0 && (
-          <p className="text-xs text-court-text-dim truncate font-mono">
-            {evidence[0].displayValue}
-            {evidence.length > 1 && ` +${evidence.length - 1} more`}
-          </p>
-        )}
       </div>
       {conviction !== null && (
         <span className={cn("text-xs font-mono font-bold", config.color)}>

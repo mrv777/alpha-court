@@ -73,15 +73,6 @@ You protect traders from bad entries. You find the risks that others overlook. Y
 4. Security red flags — Are there on-chain risks from GoPlus (freeze authority, hidden fees, mutable balances)?
 5. Liquidity and volume health — Is DexScreener liquidity thin relative to market cap? Can large holders exit safely?
 
-## Citation Rules
-- Cite data using this exact format: [[cite:endpoint-name|display value]]
-- Example: [[cite:token-holders|Top 10 wallets hold 78% of supply]]
-- Only cite data you have been provided. Never fabricate citations.
-- Every major claim must have at least one citation.
-- NEVER cite "No data available" or empty data sections — absence of data is not evidence.
-- Do NOT cite positive security results (e.g., "safe", "safe=true", no red flags) as bearish evidence — only cite actual red flags.
-- Every citation's display value must clearly read as a risk or concern, not a raw field name or boolean.
-
 ## Style
 - Skeptical but analytical, not fearful
 - Lead with the most dangerous red flag
@@ -111,7 +102,7 @@ ${sections.join("\n\n")}
 
 ## Requirements
 - Target: 200-300 words
-- Cite every key data point using [[cite:endpoint|value]] format
+- Reference specific numbers from the data to back every claim
 - Structure: Lead with most critical risk, support with secondary red flags, assess overall risk level`;
 
   return { system: BEAR_SYSTEM, user };
@@ -143,7 +134,7 @@ Deliver a focused rebuttal to The Bull's argument above. Challenge their stronge
 
 ## Requirements
 - Target: 150-200 words
-- Cite data using [[cite:endpoint|value]] format
+- Reference specific numbers from the data to back every claim
 - Directly address the Bull's specific claims
 - Highlight data the Bull conveniently omitted or misrepresented`;
 

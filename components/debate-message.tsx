@@ -3,8 +3,7 @@
 import { memo, useMemo, type ReactNode } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { CitationChip } from "@/components/citation-chip";
-import { parseCitationStream } from "@/lib/citations";
+import { parseCitations } from "@/lib/citations";
 import type { AgentRole, DebatePhase } from "@/lib/agents/types";
 
 const AGENT_STYLE: Record<
@@ -91,7 +90,6 @@ interface DebateMessageProps {
   agent: AgentRole;
   phase: DebatePhase;
   content: string;
-  evidence?: Array<{ endpoint: string; displayValue: string }>;
   isStreaming?: boolean;
 }
 
@@ -99,27 +97,12 @@ export const DebateMessage = memo(function DebateMessage({
   agent,
   phase,
   content,
-  evidence,
   isStreaming,
 }: DebateMessageProps) {
   const style = AGENT_STYLE[agent];
 
-  // Build a map of endpoint → displayValue from evidence for raw data lookup
-  const evidenceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    if (evidence) {
-      for (const e of evidence) {
-        map.set(e.endpoint, e.displayValue);
-      }
-    }
-    return map;
-  }, [evidence]);
-
-  // Parse content into text + citation segments
-  const segments = useMemo(() => {
-    const result = parseCitationStream(content, "");
-    return result.segments;
-  }, [content]);
+  // Strip any [[cite:...]] markup (backward compat with old debates)
+  const cleanText = useMemo(() => parseCitations(content).cleanText, [content]);
 
   return (
     <div
@@ -145,20 +128,9 @@ export const DebateMessage = memo(function DebateMessage({
         </span>
       </div>
 
-      {/* Message content with inline citations + markdown */}
+      {/* Message content with markdown */}
       <div className="text-[15px] text-court-text/90 leading-[1.7]">
-        {segments.map((seg, i) =>
-          seg.type === "text" ? (
-            <span key={i}>{renderInlineMarkdown(seg.content)}</span>
-          ) : (
-            <CitationChip
-              key={i}
-              endpoint={seg.endpoint}
-              displayValue={seg.displayValue}
-              rawData={evidenceMap.get(seg.endpoint) || null}
-            />
-          )
-        )}
+        {renderInlineMarkdown(cleanText)}
         {isStreaming && (
           <span className="inline-block w-1.5 h-4 bg-court-text-muted/60 ml-0.5 animate-pulse rounded-sm align-text-bottom" />
         )}
