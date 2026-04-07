@@ -12,6 +12,9 @@ interface TrialData {
   token_name: string | null;
   token_symbol: string | null;
   token_icon_url: string | null;
+  price_usd: number | null;
+  mcap_usd: number | null;
+  liquidity_usd: number | null;
   status: string;
   error_message: string | null;
 }
@@ -57,8 +60,12 @@ export function TrialClient({ trial }: TrialClientProps) {
           trialId={trial.id}
           tokenName={tokenName}
           tokenSymbol={trial.token_symbol}
+          tokenAddress={trial.token_address}
           tokenIconUrl={trial.token_icon_url}
           chain={trial.chain}
+          priceUsd={trial.price_usd}
+          mcapUsd={trial.mcap_usd}
+          liquidityUsd={trial.liquidity_usd}
           state={state}
         />
       </div>

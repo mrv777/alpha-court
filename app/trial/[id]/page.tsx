@@ -10,6 +10,9 @@ interface TrialRow {
   token_name: string | null;
   token_symbol: string | null;
   token_icon_url: string | null;
+  price_usd: number | null;
+  mcap_usd: number | null;
+  liquidity_usd: number | null;
   status: string;
   verdict_label: string | null;
   verdict_summary: string | null;
@@ -20,6 +23,7 @@ function getTrial(id: string): TrialRow | undefined {
   return getDb()
     .prepare(
       `SELECT id, token_address, chain, token_name, token_symbol, token_icon_url,
+              price_usd, mcap_usd, liquidity_usd,
               status, verdict_label, verdict_summary, error_message
        FROM trials WHERE id = ?`
     )

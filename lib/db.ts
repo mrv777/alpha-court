@@ -87,6 +87,21 @@ function initSchema(db: Database.Database): void {
   } catch {
     // Column already exists — ignore
   }
+  try {
+    db.exec(`ALTER TABLE trials ADD COLUMN price_usd REAL`);
+  } catch {
+    // Column already exists — ignore
+  }
+  try {
+    db.exec(`ALTER TABLE trials ADD COLUMN mcap_usd REAL`);
+  } catch {
+    // Column already exists — ignore
+  }
+  try {
+    db.exec(`ALTER TABLE trials ADD COLUMN liquidity_usd REAL`);
+  } catch {
+    // Column already exists — ignore
+  }
 }
 
 /** Close database connection (useful for tests) */

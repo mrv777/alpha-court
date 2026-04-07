@@ -104,6 +104,15 @@ function updateTrialIconUrl(trialId: string, iconUrl: string): void {
     .run(iconUrl, trialId);
 }
 
+function updateTrialTokenStats(
+  trialId: string,
+  stats: { priceUsd?: number; mcapUsd?: number; liquidityUsd?: number }
+): void {
+  getDb()
+    .prepare("UPDATE trials SET price_usd = ?, mcap_usd = ?, liquidity_usd = ? WHERE id = ?")
+    .run(stats.priceUsd ?? null, stats.mcapUsd ?? null, stats.liquidityUsd ?? null, trialId);
+}
+
 function persistMessage(
   trialId: string,
   agent: AgentRole | "system",
@@ -362,10 +371,17 @@ export async function runDebate(
 
     emit({ type: "phase", phase: "gathering", status: "complete" });
 
-    // Persist token icon URL from DexScreener (either side has it)
-    const iconUrl = bullData.dexScreener?.imageUrl ?? bearData.dexScreener?.imageUrl;
-    if (iconUrl) {
-      updateTrialIconUrl(trialId, iconUrl);
+    // Persist token icon URL + market stats from DexScreener
+    const dex = bullData.dexScreener ?? bearData.dexScreener;
+    if (dex?.imageUrl) {
+      updateTrialIconUrl(trialId, dex.imageUrl);
+    }
+    if (dex) {
+      updateTrialTokenStats(trialId, {
+        priceUsd: dex.priceUsd,
+        mcapUsd: dex.marketCapUsd ?? undefined,
+        liquidityUsd: dex.liquidityUsd,
+      });
     }
 
     // ── Phase 2: Opening Statements (parallel) ──────────────────────

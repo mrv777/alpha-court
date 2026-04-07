@@ -20,12 +20,25 @@ const PHASE_LABELS: Record<DebatePhase, string> = {
   verdict: "Verdict",
 };
 
+/** Format a USD value compactly: $1.2M, $45K, $0.0034 */
+function fmtUsd(value: number): string {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
+  if (value >= 1) return `$${value.toFixed(2)}`;
+  // Small prices: show significant digits
+  return `$${value.toPrecision(3)}`;
+}
+
 interface CourtroomProps {
   trialId: string;
   tokenName: string;
   tokenSymbol: string | null;
+  tokenAddress: string;
   tokenIconUrl?: string | null;
   chain: string;
+  priceUsd?: number | null;
+  mcapUsd?: number | null;
+  liquidityUsd?: number | null;
   state: DebateStreamState;
 }
 
@@ -33,8 +46,12 @@ export function Courtroom({
   trialId,
   tokenName,
   tokenSymbol,
+  tokenAddress,
   tokenIconUrl,
   chain,
+  priceUsd,
+  mcapUsd,
+  liquidityUsd,
   state,
 }: CourtroomProps) {
   const { messages, phase, verdict, isStreaming, error, dataProgress } = state;
@@ -59,8 +76,9 @@ export function Courtroom({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-court-border px-4 py-3 shrink-0">
-        <div className="flex items-center gap-3">
+      <header className="flex items-center justify-between border-b border-court-border px-4 py-3 shrink-0 gap-4">
+        {/* Token identity */}
+        <div className="flex items-center gap-3 shrink-0">
           <Image
             src={tokenIconUrl || "/logo.png"}
             alt={tokenIconUrl ? displayName ?? "Token" : "Alpha Court"}
@@ -68,25 +86,63 @@ export function Courtroom({
             height={24}
             className={cn("shrink-0", tokenIconUrl ? "rounded-full" : "rounded")}
           />
-          <div>
-            <h1 className="text-sm font-bold text-court-text">
-              {displayName}
-              <span className="text-court-text-dim font-normal"> on {chain}</span>
-            </h1>
-          </div>
+          <h1 className="text-sm font-bold text-court-text">
+            {displayName}
+            <span className="text-court-text-dim font-normal"> on {chain}</span>
+          </h1>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Phase indicator */}
-          {phase && (
-            <div className="flex items-center gap-2">
-              {isStreaming && (
-                <span className="size-2 rounded-full bg-bull animate-pulse" />
-              )}
-              <span className="text-xs font-semibold uppercase tracking-wider text-court-text-muted">
-                {PHASE_LABELS[phase]}
+        {/* Token stats + links */}
+        <div className="flex items-center gap-4">
+          {/* Market stats */}
+          {priceUsd != null && (
+            <div className="hidden sm:flex items-center gap-3 text-xs font-mono text-court-text-muted">
+              <span>
+                <span className="text-court-text-dim">Price </span>
+                {fmtUsd(priceUsd)}
               </span>
+              {mcapUsd != null && (
+                <span>
+                  <span className="text-court-text-dim">MCap </span>
+                  {fmtUsd(mcapUsd)}
+                </span>
+              )}
+              {liquidityUsd != null && (
+                <span>
+                  <span className="text-court-text-dim">Liq </span>
+                  {fmtUsd(liquidityUsd)}
+                </span>
+              )}
             </div>
+          )}
+
+          {/* Trade links */}
+          <div className="flex items-center gap-2">
+            {/* DexScreener — works for all chains */}
+            <a
+              href={`https://dexscreener.com/${chain}/${tokenAddress}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-court-border text-court-text-muted hover:text-court-text hover:border-court-border-light transition-colors"
+            >
+              Chart
+            </a>
+            {/* Jupiter swap — Solana only */}
+            {chain === "solana" && (
+              <a
+                href={`https://jup.ag/swap/SOL-${tokenAddress}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-bull/30 text-bull hover:bg-bull/10 transition-colors"
+              >
+                Trade
+              </a>
+            )}
+          </div>
+
+          {/* Streaming indicator */}
+          {isStreaming && phase && (
+            <span className="size-2 rounded-full bg-bull animate-pulse shrink-0" />
           )}
         </div>
       </header>
