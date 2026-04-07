@@ -43,42 +43,29 @@ function truncateSummary(summary: string, maxLines: number = 3): string {
   return summary.slice(0, maxChars - 3).trimEnd() + "...";
 }
 
-function buildGaugeSvg(score: number): string {
-  const radius = 80;
-  const strokeWidth = 10;
-  const center = 100;
-
-  const scoreAngle = ((score + 100) / 200) * 180;
+function buildScoreBarHtml(score: number, label: string): string {
   const color = getScoreColor(score);
-
-  function polarToCartesian(angleDeg: number) {
-    const rad = (angleDeg * Math.PI) / 180;
-    return {
-      x: center + radius * Math.cos(rad),
-      y: center - radius * Math.sin(rad),
-    };
-  }
-
-  const bgStart = polarToCartesian(180);
-  const bgEnd = polarToCartesian(0);
-  const bgPath = `M ${bgStart.x} ${bgStart.y} A ${radius} ${radius} 0 0 1 ${bgEnd.x} ${bgEnd.y}`;
-
-  let fgPath = "";
-  if (scoreAngle > 0) {
-    const fgStart = polarToCartesian(180);
-    const fgAngle = 180 - scoreAngle;
-    const fgEnd = polarToCartesian(Math.max(fgAngle, 0));
-    const largeArc = scoreAngle > 180 ? 1 : 0;
-    fgPath = `<path d="M ${fgStart.x} ${fgStart.y} A ${radius} ${radius} 0 ${largeArc} 1 ${fgEnd.x} ${fgEnd.y}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round"/>`;
-  }
-
   const scoreText = score > 0 ? `+${score}` : `${score}`;
+  const position = ((score + 100) / 200) * 100;
+  const fillFrom = score >= 0 ? 50 : position;
+  const fillWidth = score >= 0 ? position - 50 : 50 - position;
 
-  return `<svg viewBox="0 0 200 115" width="200" height="115">
-    <path d="${bgPath}" fill="none" stroke="#1e1e2e" stroke-width="${strokeWidth}" stroke-linecap="round"/>
-    ${fgPath}
-    <text x="100" y="110" text-anchor="middle" fill="${color}" font-family="monospace" font-size="32" font-weight="bold">${scoreText}</text>
-  </svg>`;
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:12px;min-width:240px">
+    <div style="font-size:56px;font-family:monospace;font-weight:bold;color:${color}">${scoreText}</div>
+    <div style="font-size:28px;font-weight:800;color:${color};letter-spacing:2px;text-transform:uppercase">${label}</div>
+    <div style="width:100%;position:relative">
+      <div style="height:6px;width:100%;background:#1e1e2e;position:relative">
+        <div style="position:absolute;left:50%;top:0;width:1px;height:100%;background:#555570"></div>
+        <div style="position:absolute;left:${fillFrom}%;top:0;width:${fillWidth}%;height:100%;background:${color}"></div>
+        <div style="position:absolute;left:${position}%;top:50%;transform:translate(-50%,-50%);width:2px;height:16px;background:${color}"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span style="font-size:10px;font-family:monospace;color:#555570">-100</span>
+        <span style="font-size:10px;font-family:monospace;color:#555570">0</span>
+        <span style="font-size:10px;font-family:monospace;color:#555570">+100</span>
+      </div>
+    </div>
+  </div>`;
 }
 
 function buildConvictionBar(
@@ -91,20 +78,19 @@ function buildConvictionBar(
       <span style="font-size:13px;color:#8888a0">${label}</span>
       <span style="font-size:13px;font-family:monospace;font-weight:bold;color:${color}">${value}</span>
     </div>
-    <div style="height:8px;border-radius:4px;background:#1e1e2e;overflow:hidden">
-      <div style="height:100%;width:${value}%;border-radius:4px;background:${color}"></div>
+    <div style="height:8px;background:#1e1e2e;overflow:hidden">
+      <div style="height:100%;width:${value}%;background:${color}"></div>
     </div>
   </div>`;
 }
 
 export function buildVerdictCardHtml(data: VerdictCardData): string {
-  const scoreColor = getScoreColor(data.score);
   const safetyConfig = getSafetyConfig(data.safety);
   const displayName = data.tokenSymbol
     ? `$${data.tokenSymbol}`
     : data.tokenName;
   const summary = truncateSummary(data.summary);
-  const gaugeSvg = buildGaugeSvg(data.score);
+  const scoreBarHtml = buildScoreBarHtml(data.score, data.label);
 
   return `<!DOCTYPE html>
 <html>
@@ -142,11 +128,8 @@ export function buildVerdictCardHtml(data: VerdictCardData): string {
 
   <!-- Main content -->
   <div style="flex:1;display:flex;gap:48px;align-items:center">
-    <!-- Left: gauge + label -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;min-width:240px">
-      ${gaugeSvg}
-      <div style="font-size:36px;font-weight:800;color:${scoreColor};letter-spacing:-0.5px;text-align:center">${data.label}</div>
-    </div>
+    <!-- Left: score + label -->
+    ${scoreBarHtml}
 
     <!-- Right: summary + meters + safety -->
     <div style="flex:1;display:flex;flex-direction:column;gap:24px">

@@ -139,7 +139,7 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
     <div className="w-full max-w-xl mx-auto">
       {/* Search area — glass card */}
       <motion.div
-        className="glow-border rounded-2xl p-4 sm:p-5"
+        className="glow-border p-4 sm:p-5"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -206,7 +206,7 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
         ].map((a) => (
           <motion.div
             key={a.label}
-            className={`relative overflow-hidden rounded-xl border ${a.border} bg-white/[0.02] backdrop-blur-sm p-3 text-center`}
+            className={`relative overflow-hidden border ${a.border} bg-white/[0.02] backdrop-blur-sm p-3 text-center`}
             variants={fadeUp}
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
             whileHover={{ y: -2, transition: { duration: 0.2 } }}
@@ -214,7 +214,7 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
             {/* Top edge highlight */}
             <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${a.glow} to-transparent`} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={a.avatar} alt={a.label} className="size-10 rounded-lg mx-auto mb-2" />
+            <img src={a.avatar} alt={a.label} className="size-10 rounded-sm mx-auto mb-2" />
             <p className={`text-xs font-bold ${a.color}`}>{a.label}</p>
             <p className="text-[10px] text-court-text-dim">{a.desc}</p>
           </motion.div>
@@ -249,7 +249,7 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-8 text-center">
+          <div className="border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-8 text-center">
             <p className="text-court-text-muted">
               No trials yet — put a token on trial!
             </p>

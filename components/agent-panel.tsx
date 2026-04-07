@@ -79,7 +79,7 @@ export function AgentPanel({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border bg-white/[0.02] backdrop-blur-sm p-4 flex flex-col gap-4",
+        "relative overflow-hidden border bg-white/[0.02] backdrop-blur-sm p-4 flex flex-col gap-4",
         config.borderColor,
         config.glowColor,
         className
@@ -94,7 +94,7 @@ export function AgentPanel({
           alt={config.label}
           width={36}
           height={36}
-          className="rounded-md shrink-0"
+          className="rounded-sm shrink-0"
         />
         <div>
           <h3 className={cn("text-sm font-bold", config.color)}>
@@ -113,10 +113,10 @@ export function AgentPanel({
               {conviction}
             </span>
           </div>
-          <div className="h-2 rounded-full bg-court-border overflow-hidden">
+          <div className="h-2 bg-court-border overflow-hidden">
             <div
               className={cn(
-                "h-full rounded-full transition-all duration-[2000ms] ease-out",
+                "h-full transition-all duration-[2000ms] ease-out",
                 config.meterColor
               )}
               style={{ width: `${conviction}%` }}
@@ -144,7 +144,7 @@ export function AgentPanelCompact({
   return (
     <div
       className={cn(
-        "rounded-lg border bg-court-surface px-3 py-2 flex items-center gap-3 min-w-[160px] shrink-0",
+        "border bg-court-surface px-3 py-2 flex items-center gap-3 min-w-[160px] shrink-0",
         config.borderColor
       )}
     >
@@ -153,7 +153,7 @@ export function AgentPanelCompact({
         alt={config.label}
         width={28}
         height={28}
-        className="rounded shrink-0"
+        className="rounded-sm shrink-0"
       />
       <div className="flex-1 min-w-0">
         <span className={cn("text-xs font-bold", config.color)}>

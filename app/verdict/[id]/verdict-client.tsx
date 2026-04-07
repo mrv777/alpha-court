@@ -33,7 +33,7 @@ export function VerdictClient({
               alt="Alpha Court"
               width={28}
               height={28}
-              className="rounded"
+              className="rounded-sm"
             />
             <span className="text-sm font-bold text-judge tracking-wide">
               ALPHA COURT

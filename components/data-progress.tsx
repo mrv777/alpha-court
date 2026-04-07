@@ -219,7 +219,7 @@ function AgentBriefing({
   return (
     <motion.div
       className={cn(
-        "relative overflow-hidden rounded-xl border bg-white/[0.02] backdrop-blur-sm",
+        "relative overflow-hidden border bg-white/[0.02] backdrop-blur-sm",
         config.borderClass,
         config.bgGlow,
         agent === "judge" && "sm:-mt-1 sm:mb-1"
@@ -265,7 +265,7 @@ function AgentBriefing({
             alt={config.label}
             width={32}
             height={32}
-            className="rounded-lg shrink-0"
+            className="rounded-sm shrink-0"
           />
           <div>
             <h3
@@ -377,9 +377,9 @@ export function DataProgressGrid({ items }: DataProgressGridProps) {
 
       {/* Overall progress bar */}
       <div className="mx-auto max-w-xs">
-        <div className="h-0.5 rounded-full bg-court-border overflow-hidden">
+        <div className="h-0.5 bg-court-border overflow-hidden">
           <motion.div
-            className="h-full bg-judge rounded-full"
+            className="h-full bg-judge"
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
             transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}

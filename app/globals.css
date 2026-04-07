@@ -10,6 +10,7 @@
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
   --font-heading: var(--font-space-grotesk);
+  --font-transcript: var(--font-courier-prime);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -89,7 +90,7 @@
   --chart-3: #f59e0b;
   --chart-4: #8888a0;
   --chart-5: #555570;
-  --radius: 0.625rem;
+  --radius: 0.125rem;
   --sidebar: #0a0e1a;
   --sidebar-foreground: #f0f0f5;
   --sidebar-primary: #f59e0b;
@@ -161,7 +162,7 @@
 
 *::-webkit-scrollbar-thumb {
   background: #1e1e2e;
-  border-radius: 3px;
+  border-radius: 1px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
@@ -178,6 +179,9 @@
   }
   .font-heading {
     font-family: var(--font-heading), var(--font-sans), sans-serif;
+  }
+  .font-transcript {
+    font-family: var(--font-transcript), "Courier New", monospace;
   }
 }
 

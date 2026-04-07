@@ -90,7 +90,7 @@ export function TrialCard({
     <Link
       href={`/trial/${id}`}
       className={cn(
-        "group relative block overflow-hidden rounded-xl border p-4 transition-all",
+        "group relative block overflow-hidden border p-4 transition-all",
         "bg-white/[0.02] backdrop-blur-sm hover:bg-white/[0.04]",
         colors.border,
         colors.glow,

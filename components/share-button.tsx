@@ -63,7 +63,7 @@ export function ShareButton({ trialId, className }: ShareButtonProps) {
         type="button"
         onClick={handleShare}
         className={cn(
-          "flex items-center gap-2 rounded-xl border border-judge/20 bg-judge/[0.08] px-5 py-3 min-h-[44px]",
+          "flex items-center gap-2 border border-judge/20 bg-judge/[0.08] px-5 py-3 min-h-[44px]",
           "text-sm font-semibold text-judge transition-all hover:bg-judge/[0.15] hover:border-judge/30",
           copied && "border-bull/30 bg-bull/[0.08] text-bull"
         )}
@@ -85,7 +85,7 @@ export function ShareButton({ trialId, className }: ShareButtonProps) {
         type="button"
         onClick={handleDownload}
         disabled={downloading}
-        className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.04] px-5 py-3 min-h-[44px] text-sm font-medium text-court-text-muted transition-all hover:bg-white/[0.08] disabled:opacity-50"
+        className="flex items-center gap-2 border border-white/[0.06] bg-white/[0.04] px-5 py-3 min-h-[44px] text-sm font-medium text-court-text-muted transition-all hover:bg-white/[0.08] disabled:opacity-50"
       >
         <Download className={cn("size-4", downloading && "animate-pulse")} />
         {downloading ? "Generating..." : "Download Card"}

@@ -21,7 +21,7 @@ export function ChainSelector({ value, onChange, className }: ChainSelectorProps
       value={value}
       onChange={(e) => onChange(e.target.value as Chain)}
       className={cn(
-        "h-12 min-w-[100px] rounded-lg border border-court-border bg-court-surface px-3 text-sm text-court-text",
+        "h-12 min-w-[100px] border border-court-border bg-court-surface px-3 text-sm text-court-text",
         "outline-none transition-colors",
         "focus:border-judge focus:ring-1 focus:ring-judge/50",
         "cursor-pointer appearance-none",

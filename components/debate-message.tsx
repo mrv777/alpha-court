@@ -116,7 +116,7 @@ export const DebateMessage = memo(function DebateMessage({
   return (
     <div
       className={cn(
-        "rounded-xl border border-white/[0.04] bg-white/[0.02] p-4 border-l-3",
+        "border border-white/[0.04] bg-white/[0.02] p-4 border-l-3",
         style.border
       )}
     >
@@ -138,10 +138,10 @@ export const DebateMessage = memo(function DebateMessage({
       </div>
 
       {/* Message content with markdown */}
-      <div className="text-[15px] text-court-text/90 leading-[1.7] break-words">
+      <div className="text-[14px] font-transcript text-court-text/90 leading-[1.8] break-words">
         {renderInlineMarkdown(cleanText)}
         {isStreaming && (
-          <span className="inline-block w-1.5 h-4 bg-court-text-muted/60 ml-0.5 animate-pulse rounded-sm align-text-bottom" />
+          <span className="inline-block w-1.5 h-4 bg-court-text-muted/60 ml-0.5 animate-pulse align-text-bottom" />
         )}
       </div>
     </div>

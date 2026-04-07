@@ -85,7 +85,7 @@ export function CitationChip({
         type="button"
         onClick={() => setExpanded(!expanded)}
         className={cn(
-          "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5",
+          "inline-flex items-center gap-1 border px-1.5 py-0.5",
           "text-xs font-mono font-medium leading-tight",
           "transition-transform duration-150 ease-out",
           "hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -107,7 +107,7 @@ export function CitationChip({
           className={cn(
             "absolute left-0 sm:left-0 top-full z-50 mt-1",
             "w-[calc(100vw-2rem)] sm:w-64 max-w-64 max-h-48 overflow-auto",
-            "rounded-lg border border-court-border-light bg-court-surface p-3",
+            "border border-court-border-light bg-court-surface p-3",
             "shadow-lg shadow-black/30",
             "text-xs font-mono text-court-text-muted",
             "animate-in fade-in slide-in-from-top-1 duration-150"

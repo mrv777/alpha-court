@@ -103,7 +103,7 @@ export function DebateStream({
 
       {/* Error in stream */}
       {error && (
-        <div className="rounded-xl border border-bear/20 bg-bear/[0.06] p-4">
+        <div className="border border-bear/20 bg-bear/[0.06] p-4">
           <p className="text-sm text-bear">{error}</p>
         </div>
       )}
@@ -127,15 +127,11 @@ export function DebateStream({
 
 function PhaseDivider({ phase }: { phase: DebatePhase }) {
   return (
-    <div className="flex items-center gap-4 py-4 my-1">
-      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-judge/20 to-transparent" />
-      <div className="flex items-center gap-2 px-3.5 py-1 rounded-full border border-judge/20 bg-judge/[0.06]">
-        <span className="size-1.5 rounded-full bg-judge/50" />
-        <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-judge/80">
-          {PHASE_LABELS[phase]}
-        </span>
-      </div>
-      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-judge/20 to-transparent" />
+    <div className="flex items-center gap-3 py-4 my-1">
+      <span className="text-[11px] font-transcript font-bold uppercase tracking-[0.2em] text-judge/60 shrink-0">
+        {PHASE_LABELS[phase]}
+      </span>
+      <div className="flex-1 h-px bg-court-border" />
     </div>
   );
 }

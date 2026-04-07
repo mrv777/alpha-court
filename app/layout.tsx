@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Inter, JetBrains_Mono, Space_Grotesk, Courier_Prime } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -17,6 +17,12 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
 });
 
+const courierPrime = Courier_Prime({
+  variable: "--font-courier-prime",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Alpha Court — AI Agents Debate Your Trades",
   description:
@@ -31,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} ${courierPrime.variable} h-full antialiased`}
     >
       <body className="grain min-h-full flex flex-col">{children}</body>
     </html>

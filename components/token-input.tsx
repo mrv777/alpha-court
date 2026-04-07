@@ -153,7 +153,7 @@ export function TokenInput({
       {isOpen && results.length > 0 && (
         <ul
           role="listbox"
-          className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border border-court-border bg-court-surface shadow-lg"
+          className="absolute z-50 mt-1 w-full overflow-hidden border border-court-border bg-court-surface shadow-lg"
         >
           {results.map((token, i) => (
             <li
@@ -202,7 +202,7 @@ export function TokenInput({
       )}
 
       {isOpen && results.length === 0 && !isLoading && query.length >= 2 && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-court-border bg-court-surface p-4 text-center text-sm text-court-text-muted shadow-lg">
+        <div className="absolute z-50 mt-1 w-full border border-court-border bg-court-surface p-4 text-center text-sm text-court-text-muted shadow-lg">
           No tokens found for &ldquo;{query}&rdquo;
         </div>
       )}

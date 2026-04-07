@@ -53,7 +53,7 @@ export function SafetyBadge({ score, details, className }: SafetyBadgeProps) {
       <button
         type="button"
         className={cn(
-          "flex items-center gap-1.5 rounded-full border px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:py-1 text-xs font-medium transition-colors",
+          "flex items-center gap-1.5 border px-3 py-1.5 min-h-[44px] sm:min-h-0 sm:py-1 text-xs font-medium transition-colors",
           config.bg,
           config.border,
           config.color,
@@ -68,7 +68,7 @@ export function SafetyBadge({ score, details, className }: SafetyBadgeProps) {
         <Icon className="size-3.5" />
         <span>{config.label}</span>
         {warningCount > 0 && (
-          <span className="rounded-full bg-current/20 px-1.5 text-[10px] font-bold">
+          <span className="bg-current/20 px-1.5 text-[10px] font-bold">
             {warningCount}
           </span>
         )}
@@ -83,7 +83,7 @@ export function SafetyBadge({ score, details, className }: SafetyBadgeProps) {
             onClick={() => setShowTooltip(false)}
           />
           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-[calc(100vw-2rem)] sm:w-64 max-w-64">
-            <div className="rounded-lg border border-court-border bg-court-surface p-3 shadow-xl">
+            <div className="border border-court-border bg-court-surface p-3 shadow-xl">
               <h4 className="text-xs font-semibold text-court-text mb-2">
                 Security Findings
               </h4>

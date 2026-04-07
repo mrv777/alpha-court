@@ -84,7 +84,7 @@ export function Courtroom({
             alt={tokenIconUrl ? displayName ?? "Token" : "Alpha Court"}
             width={24}
             height={24}
-            className={cn("shrink-0", tokenIconUrl ? "rounded-full" : "rounded")}
+            className={cn("shrink-0", tokenIconUrl ? "rounded-full" : "rounded-sm")}
           />
           <h1 className="text-sm font-bold text-court-text">
             {displayName}
@@ -123,7 +123,7 @@ export function Courtroom({
               href={`https://dexscreener.com/${chain}/${tokenAddress}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-court-border text-court-text-muted hover:text-court-text hover:border-court-border-light transition-colors"
+              className="text-xs font-medium px-2.5 py-1.5 border border-court-border text-court-text-muted hover:text-court-text hover:border-court-border-light transition-colors"
             >
               Chart
             </a>
@@ -133,7 +133,7 @@ export function Courtroom({
                 href={`https://jup.ag/swap/SOL-${tokenAddress}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-bull/30 text-bull hover:bg-bull/10 transition-colors"
+                className="text-xs font-medium px-2.5 py-1.5 border border-bull/30 text-bull hover:bg-bull/10 transition-colors"
               >
                 Trade
               </a>
@@ -156,7 +156,7 @@ export function Courtroom({
               alt="Alpha Court"
               width={40}
               height={40}
-              className="rounded-lg mx-auto mb-3 animate-pulse opacity-50"
+              className="rounded-sm mx-auto mb-3 animate-pulse opacity-50"
             />
             <p className="text-sm text-court-text-muted">Preparing trial...</p>
             <p className="text-xs text-court-text-dim mt-1">
