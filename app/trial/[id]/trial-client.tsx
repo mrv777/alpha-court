@@ -53,6 +53,7 @@ export function TrialClient({ trial }: TrialClientProps) {
       {/* Courtroom */}
       <div className="flex-1 min-h-0">
         <Courtroom
+          trialId={trial.id}
           tokenName={tokenName}
           tokenSymbol={trial.token_symbol}
           chain={trial.chain}

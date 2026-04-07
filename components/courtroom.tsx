@@ -6,6 +6,8 @@ import { Scale } from "lucide-react";
 import { AgentPanel, AgentPanelCompact } from "@/components/agent-panel";
 import { DebateStream } from "@/components/debate-stream";
 import { DataProgressGrid } from "@/components/data-progress";
+import { VerdictDisplay } from "@/components/verdict-display";
+import { ShareButton } from "@/components/share-button";
 import type { DebateStreamState } from "@/hooks/use-debate-stream";
 import type { DebatePhase } from "@/lib/agents/types";
 
@@ -18,6 +20,7 @@ const PHASE_LABELS: Record<DebatePhase, string> = {
 };
 
 interface CourtroomProps {
+  trialId: string;
   tokenName: string;
   tokenSymbol: string | null;
   chain: string;
@@ -25,6 +28,7 @@ interface CourtroomProps {
 }
 
 export function Courtroom({
+  trialId,
   tokenName,
   tokenSymbol,
   chain,
@@ -156,7 +160,7 @@ export function Courtroom({
           </div>
 
           {/* Judge bar — visible when judge has spoken */}
-          {evidenceByAgent.judge.length > 0 && (
+          {evidenceByAgent.judge.length > 0 && !verdict && (
             <div className="shrink-0 border-t border-judge/20 bg-judge/5 px-4 py-3">
               <div className="flex items-center gap-3">
                 <span className="text-base">⚖️</span>
@@ -170,22 +174,19 @@ export function Courtroom({
                     </p>
                   )}
                 </div>
-                {verdict && (
-                  <div className="text-right">
-                    <span
-                      className={cn(
-                        "text-xs font-bold",
-                        verdict.score > 20
-                          ? "text-bull"
-                          : verdict.score < -20
-                            ? "text-bear"
-                            : "text-court-text-muted"
-                      )}
-                    >
-                      {verdict.label}
-                    </span>
-                  </div>
-                )}
+              </div>
+            </div>
+          )}
+
+          {/* Verdict display — the climactic reveal */}
+          {verdict && (
+            <div className="shrink-0 border-t border-judge/20 bg-judge/5 px-4 py-6">
+              <div className="max-w-lg mx-auto flex flex-col items-center gap-4">
+                <VerdictDisplay
+                  verdict={verdict}
+                  tokenName={displayName}
+                />
+                <ShareButton trialId={trialId} />
               </div>
             </div>
           )}

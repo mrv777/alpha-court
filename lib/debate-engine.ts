@@ -124,7 +124,8 @@ function persistMessage(
 function updateTrialVerdict(
   trialId: string,
   scores: VerdictScores,
-  safety: string
+  safety: string,
+  safetyDetails?: string[]
 ): void {
   getDb()
     .prepare(
@@ -136,6 +137,7 @@ function updateTrialVerdict(
            bull_conviction = ?,
            bear_conviction = ?,
            safety_score = ?,
+           safety_details_json = ?,
            completed_at = ?
        WHERE id = ?`
     )
@@ -146,6 +148,7 @@ function updateTrialVerdict(
       scores.bull_conviction,
       scores.bear_conviction,
       safety,
+      safetyDetails ? JSON.stringify(safetyDetails) : null,
       Math.floor(Date.now() / 1000),
       trialId
     );
@@ -468,16 +471,17 @@ export async function runDebate(
     }
 
     // Determine safety from Bear's GoPlus data
+    const safetyReasons = bearData.security?.reasons ?? [];
     const safety = bearData.security
       ? bearData.security.safe
         ? "clean"
-        : bearData.security.reasons.length > 2
+        : safetyReasons.length > 2
           ? "dangerous"
           : "warnings"
       : "clean";
 
     // Update trial with verdict
-    updateTrialVerdict(trialId, scores, safety);
+    updateTrialVerdict(trialId, scores, safety, safetyReasons);
 
     emit({
       type: "verdict",
