@@ -204,7 +204,12 @@ export function Courtroom({
                       tokenName={displayName}
                     />
                     <div className="flex justify-center">
-                      <ShareButton trialId={trialId} />
+                      <ShareButton
+                        trialId={trialId}
+                        tokenName={displayName}
+                        verdictLabel={verdict?.label}
+                        verdictScore={verdict?.score}
+                      />
                     </div>
                   </>
                 )}

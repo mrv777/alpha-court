@@ -56,7 +56,12 @@ export function VerdictClient({
 
           {/* Actions */}
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <ShareButton trialId={trialId} />
+            <ShareButton
+              trialId={trialId}
+              tokenName={displayName}
+              verdictLabel={verdict.label}
+              verdictScore={verdict.score}
+            />
           </div>
 
           <div className="mt-8 text-center">

@@ -58,6 +58,25 @@ const AGENT_CONFIG: Record<
 const AGENT_ORDER: AgentRole[] = ["bull", "judge", "bear"];
 const ENTRANCE_DELAYS: Record<AgentRole, number> = { bull: 0, judge: 0.15, bear: 0.3 };
 
+const ENDPOINT_LABELS: Record<string, string> = {
+  "smart-money netflow": "Tracking smart money flows",
+  "who-bought-sold (buy)": "Finding recent buyers",
+  "flow-intelligence": "Analyzing capital inflows",
+  "profiler-pnl (buyers)": "Checking buyer win rates",
+  "dexscreener (bull)": "Pulling market data",
+  "jupiter-price": "Fetching live price",
+  "token-dex-trades": "Scanning DEX sell pressure",
+  "token-holders": "Analyzing holder concentration",
+  "sm-dex-trades": "Tracking smart money exits",
+  "token-flows (whale)": "Monitoring whale movements",
+  "dexscreener (bear)": "Checking liquidity depth",
+  "goplus-security": "Running security audit",
+  "token-info": "Reviewing token metadata",
+  "token-ohlcv": "Charting price history",
+  "who-bought-sold (sell)": "Identifying recent sellers",
+  "profiler-pnl (sellers)": "Checking seller PnL",
+};
+
 // ── Progress Ring ───────────────────────────────────────────────────────
 
 function ProgressRing({
@@ -190,7 +209,7 @@ function DataSourceRow({
     >
       {showFlash && <div className="row-flash absolute inset-0" />}
       <StatusIndicator status={item.status} agentColor={agentColor} />
-      <span className="truncate">{item.endpoint}</span>
+      <span className="truncate">{ENDPOINT_LABELS[item.endpoint] ?? item.endpoint}</span>
     </div>
   );
 }

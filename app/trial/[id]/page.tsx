@@ -68,8 +68,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             images: [
               {
                 url: `/api/verdict/${id}/image`,
-                width: 1200,
-                height: 630,
+                width: 1080,
+                height: 1080,
                 alt: `${displayName} verdict: ${trial.verdict_label}`,
               },
             ],

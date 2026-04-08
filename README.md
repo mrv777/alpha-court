@@ -1,36 +1,150 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Alpha Court — AI Agents Debate Your Trades
+
+> *"I don't trust one AI. I don't trust one signal. So I built a courtroom where 3 AI analysts argue about every trade — and I watch the trial."*
+
+Three AI agents — **The Bull**, **The Bear**, and **The Judge** — debate whether to buy a crypto token in real-time, each powered by different on-chain data from the **Nansen CLI**. Paste a token address, watch the trial unfold with real data citations, get a verdict, and share it.
+
+<!-- Add screenshots here: landing page, live debate, verdict page -->
+
+## How It Works
+
+1. **Paste a token** — Solana, Base, or Ethereum address (with autocomplete via Nansen search)
+2. **Data gathering** — All 3 agents fetch on-chain data in parallel (14 Nansen CLI endpoints + supplementary sources)
+3. **Opening statements** — Bull argues FOR, Bear argues AGAINST, both citing real data
+4. **Rebuttals** — Each agent responds to the other's case
+5. **Cross-examination** — The Judge questions both sides, cross-referencing claims with X/Twitter search and web search
+6. **Verdict** — The Judge scores from -100 (Strong Sell) to +100 (Strong Buy) with conviction meters
+
+The entire debate streams live via SSE. Verdicts are shareable as OG image cards on Twitter.
+
+## Nansen CLI Integration (14 Endpoints)
+
+### The Bull (argues FOR)
+| # | Endpoint | What it reveals |
+|---|----------|-----------------|
+| 1 | `smart-money netflow` | Smart money net capital flow direction |
+| 2 | `token who-bought-sold` (buy side) | Recent smart money buyers |
+| 3 | `token flow-intelligence` | Capital flow by entity label (whales, millionaires, etc.) |
+| 4 | `profiler pnl-summary` (buyers) | Win rate and realized PnL of top buying wallets |
+
+### The Bear (argues AGAINST)
+| # | Endpoint | What it reveals |
+|---|----------|-----------------|
+| 5 | `token dex-trades` | DEX sell pressure and volume |
+| 6 | `token holders` | Holder concentration risk |
+| 7 | `smart-money dex-trades` | Smart money selling activity |
+| 8 | `token flows --label whale` | Whale exit patterns |
+
+### The Judge (decides)
+| # | Endpoint | What it reveals |
+|---|----------|-----------------|
+| 9 | `token info` | Token metadata (market cap, supply, age) |
+| 10 | `token ohlcv` | 7-day price history and trends |
+| 11 | `token who-bought-sold` (sell side) | Recent sellers |
+| 12 | `profiler pnl-summary` (sellers) | Top seller PnL |
+
+### Token Search
+| # | Endpoint | What it reveals |
+|---|----------|-----------------|
+| 13 | `research search` | Token autocomplete on landing page |
+| 14 | `research token-info` | Token metadata for search results |
+
+### Supplementary Data Sources
+- **DexScreener** — DEX price, volume, liquidity, FDV
+- **Jupiter API** — Real-time Solana token prices
+- **GoPlus Security** — On-chain safety flags (freeze authority, hidden fees, mintable, etc.)
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js (App Router), TypeScript, React 19 |
+| Styling | Tailwind CSS v4, shadcn/ui, custom dark courtroom theme |
+| AI Models | Grok 4 via Vercel AI SDK (`ai` + `@ai-sdk/xai`) |
+| AI Tools | Judge uses `x_search` + `web_search` for real-time sentiment verification |
+| Primary Data | Nansen CLI (14 endpoints, cached, with concurrency limiter + retry) |
+| Database | SQLite via better-sqlite3 (WAL mode) |
+| Streaming | Server-Sent Events (SSE) via ReadableStream |
+| OG Images | `next/og` ImageResponse for shareable verdict cards |
+| Testing | Vitest |
+
+## Architecture
+
+```
+User pastes token address
+         |
+         v
+  POST /api/trial  (validate, create DB record)
+         |
+         v
+  GET /api/debate/:id  (SSE stream)
+         |
+         v
+  ┌──────────────────────────────────────────────┐
+  │            Debate Engine                      │
+  │                                               │
+  │  Phase 1: DATA GATHERING (parallel)           │
+  │    Bull: 4 Nansen + DexScreener + Jupiter     │
+  │    Bear: 4 Nansen + DexScreener + GoPlus      │
+  │    Judge: 4 Nansen endpoints                  │
+  │    (max 6 concurrent CLI calls)               │
+  │                                               │
+  │  Phase 2: OPENING STATEMENTS (parallel)       │
+  │    Bull & Bear stream arguments (~300 words)  │
+  │                                               │
+  │  Phase 3: REBUTTALS (sequential)              │
+  │    Bear rebuts Bull, Bull rebuts Bear          │
+  │                                               │
+  │  Phase 4: CROSS-EXAMINATION                   │
+  │    Judge questions both + web/X verification   │
+  │                                               │
+  │  Phase 5: VERDICT                             │
+  │    Score: -100 to +100                        │
+  │    Label: Strong Sell → Strong Buy            │
+  │    Bull & Bear conviction meters              │
+  └──────────────────────────────────────────────┘
+         |
+         v
+  /verdict/:id  (shareable page + OG image)
+```
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- [Nansen CLI](https://docs.nansen.ai/cli) installed and authenticated
+- xAI API key (for Grok models)
+
+### Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Install dependencies
+pnpm install
+
+# Configure environment
+cp .env.example .env.local
+# Edit .env.local:
+#   XAI_API_KEY=your-xai-api-key
+#   NEXT_PUBLIC_APP_URL=http://localhost:3000  (optional)
+
+# Run development server
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) and put a token on trial.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm build
+pnpm start
+```
 
-## Learn More
+## Demo
 
-To learn more about Next.js, take a look at the following resources:
+<!-- Add demo video link and X/Twitter post link here -->
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built for the **#NansenCLI Mac Mini Challenge** — Week 4 (Final Round)

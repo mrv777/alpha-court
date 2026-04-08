@@ -6,10 +6,19 @@ import { Share2, Download, Check } from "lucide-react";
 
 interface ShareButtonProps {
   trialId: string;
+  tokenName?: string;
+  verdictLabel?: string;
+  verdictScore?: number;
   className?: string;
 }
 
-export function ShareButton({ trialId, className }: ShareButtonProps) {
+function buildXIntentUrl(tokenName: string, label: string, score: number, url: string): string {
+  const scoreStr = score > 0 ? `+${score}` : `${score}`;
+  const text = `I put ${tokenName} on trial at Alpha Court. The verdict: ${label} (${scoreStr}). #NansenCLI`;
+  return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+}
+
+export function ShareButton({ trialId, tokenName, verdictLabel, verdictScore, className }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -58,12 +67,12 @@ export function ShareButton({ trialId, className }: ShareButtonProps) {
   }, [trialId]);
 
   return (
-    <div className={cn("flex items-center gap-3", className)}>
+    <div className={cn("flex flex-wrap items-center justify-center gap-2", className)}>
       <button
         type="button"
         onClick={handleShare}
         className={cn(
-          "flex items-center gap-2 border border-judge/20 bg-judge/[0.08] px-5 py-3 min-h-[44px]",
+          "flex items-center gap-2 border border-judge/20 bg-judge/[0.08] px-3 py-2 whitespace-nowrap",
           "text-sm font-semibold text-judge transition-all hover:bg-judge/[0.15] hover:border-judge/30",
           copied && "border-bull/30 bg-bull/[0.08] text-bull"
         )}
@@ -76,7 +85,7 @@ export function ShareButton({ trialId, className }: ShareButtonProps) {
         ) : (
           <>
             <Share2 className="size-4" />
-            Share Verdict
+            Share
           </>
         )}
       </button>
@@ -85,11 +94,25 @@ export function ShareButton({ trialId, className }: ShareButtonProps) {
         type="button"
         onClick={handleDownload}
         disabled={downloading}
-        className="flex items-center gap-2 border border-white/[0.06] bg-white/[0.04] px-5 py-3 min-h-[44px] text-sm font-medium text-court-text-muted transition-all hover:bg-white/[0.08] disabled:opacity-50"
+        className="flex items-center gap-2 border border-white/[0.06] bg-white/[0.04] px-3 py-2 whitespace-nowrap text-sm font-medium text-court-text-muted transition-all hover:bg-white/[0.08] disabled:opacity-50"
       >
         <Download className={cn("size-4", downloading && "animate-pulse")} />
-        {downloading ? "Generating..." : "Download Card"}
+        {downloading ? "Saving..." : "Download"}
       </button>
+
+      {tokenName && verdictLabel != null && verdictScore != null && (
+        <a
+          href={buildXIntentUrl(tokenName, verdictLabel, verdictScore, verdictUrl)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 border border-white/[0.06] bg-white/[0.04] px-3 py-2 whitespace-nowrap text-sm font-medium text-court-text-muted transition-all hover:bg-white/[0.08]"
+        >
+          <svg className="size-3.5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+          Post to X
+        </a>
+      )}
     </div>
   );
 }

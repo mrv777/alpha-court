@@ -29,7 +29,7 @@ function getScoreColor(score: number): string {
   return "#ef4444";
 }
 
-function truncateSummary(summary: string, maxChars = 220): string {
+function truncateSummary(summary: string, maxChars = 350): string {
   if (summary.length <= maxChars) return summary;
   return summary.slice(0, maxChars - 3).trimEnd() + "...";
 }
@@ -54,7 +54,7 @@ async function getLogoDataUri(): Promise<string | null> {
   if (logoCached) return logoCached;
   try {
     const buf = await readFile(join(process.cwd(), "public/logo.png"));
-    logoCached = `data:image/png;base64,${buf.toString("base64")}`;
+    logoCached = `data:image/jpeg;base64,${buf.toString("base64")}`;
     return logoCached;
   } catch {
     return null;
@@ -119,50 +119,37 @@ export async function GET(
     (
       <div
         style={{
-          width: 1200,
-          height: 630,
+          width: 1080,
+          height: 1080,
           display: "flex",
           flexDirection: "column",
-          padding: "40px 48px",
+          padding: "48px 56px",
           background: "linear-gradient(145deg, #0a0e1a 0%, #141824 50%, #0a0e1a 100%)",
           color: "#f0f0f5",
           fontFamily: "sans-serif",
-          position: "relative",
         }}
       >
-        {/* Accent bar on left edge */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: 4,
-            height: "100%",
-            background: scoreColor,
-          }}
-        />
-
         {/* Header */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            marginBottom: 20,
+            marginBottom: 28,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {logoUri ? (
               <img
                 src={logoUri}
-                width={28}
-                height={28}
+                width={48}
+                height={48}
                 style={{ borderRadius: 4 }}
               />
             ) : null}
             <span
               style={{
-                fontSize: 16,
+                fontSize: 22,
                 fontWeight: 700,
                 color: "#f59e0b",
                 letterSpacing: 0.5,
@@ -171,44 +158,39 @@ export async function GET(
               ALPHA COURT
             </span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span
-              style={{
-                fontSize: 14,
-                color: "#555570",
-                fontFamily: "monospace",
-              }}
-            >
-              {displayName} on {trial.chain}
-            </span>
-          </div>
+          <span
+            style={{
+              fontSize: 20,
+              color: "#555570",
+              fontFamily: "monospace",
+            }}
+          >
+            {displayName} on {trial.chain}
+          </span>
         </div>
 
         {/* Divider */}
-        <div style={{ height: 1, background: "#1e1e2e", marginBottom: 24, display: "flex" }} />
+        <div style={{ height: 1, background: "#1e1e2e", marginBottom: 40, display: "flex" }} />
 
-        {/* Main content */}
+        {/* Score + label centered */}
         <div
           style={{
             display: "flex",
-            flex: 1,
-            gap: 40,
+            flexDirection: "column",
             alignItems: "center",
+            marginBottom: 20,
           }}
         >
-          {/* Left: score + label + bar */}
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 8,
-              minWidth: 220,
+              alignItems: "baseline",
+              gap: 24,
             }}
           >
             <div
               style={{
-                fontSize: 64,
+                fontSize: 150,
                 fontFamily: "monospace",
                 fontWeight: "bold",
                 color: scoreColor,
@@ -219,243 +201,234 @@ export async function GET(
             </div>
             <div
               style={{
-                fontSize: 24,
+                fontSize: 60,
                 fontWeight: 800,
                 color: scoreColor,
-                letterSpacing: 2,
+                letterSpacing: 5,
                 textTransform: "uppercase",
-                marginTop: 4,
               }}
             >
               {label}
             </div>
-            {/* Score bar */}
-            <div style={{ width: "100%", display: "flex", flexDirection: "column", marginTop: 8 }}>
-              <div
-                style={{
-                  height: 6,
-                  width: "100%",
-                  background: "#1e1e2e",
-                  display: "flex",
-                  position: "relative",
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    left: "50%",
-                    top: 0,
-                    width: 1,
-                    height: "100%",
-                    background: "#555570",
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    left: `${fillFrom}%`,
-                    top: 0,
-                    width: `${fillWidth}%`,
-                    height: "100%",
-                    background: scoreColor,
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    left: `${position}%`,
-                    top: "50%",
-                    transform: "translate(-50%,-50%)",
-                    width: 2,
-                    height: 14,
-                    background: scoreColor,
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginTop: 3,
-                }}
-              >
-                <span style={{ fontSize: 9, fontFamily: "monospace", color: "#555570" }}>-100</span>
-                <span style={{ fontSize: 9, fontFamily: "monospace", color: "#555570" }}>0</span>
-                <span style={{ fontSize: 9, fontFamily: "monospace", color: "#555570" }}>+100</span>
-              </div>
-            </div>
-
-            {/* Dangerous warning under score */}
-            {isDangerous && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  marginTop: 12,
-                  padding: "4px 12px",
-                  background: "rgba(239, 68, 68, 0.15)",
-                  border: "1px solid rgba(239, 68, 68, 0.3)",
-                }}
-              >
-                <span style={{ fontSize: 14 }}>💀</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#ef4444" }}>
-                  DANGEROUS{safetyReasons.length > 0 ? ` (${safetyReasons.length})` : ""}
-                </span>
-              </div>
-            )}
           </div>
+          {/* Dangerous warning */}
+          {isDangerous && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 16,
+                padding: "8px 18px",
+                background: "rgba(239, 68, 68, 0.15)",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+              }}
+            >
+              <span style={{ fontSize: 20 }}>💀</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: "#ef4444" }}>
+                DANGEROUS{safetyReasons.length > 0 ? ` (${safetyReasons.length})` : ""}
+              </span>
+            </div>
+          )}
+        </div>
 
-          {/* Right: summary + conviction + market data */}
+        {/* Score bar */}
+        <div style={{ width: 420, display: "flex", flexDirection: "column", marginBottom: 40, alignSelf: "center" }}>
+          <div
+            style={{
+              height: 8,
+              width: "100%",
+              background: "#1e1e2e",
+              display: "flex",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: 0,
+                width: 1,
+                height: "100%",
+                background: "#555570",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: `${fillFrom}%`,
+                top: 0,
+                width: `${fillWidth}%`,
+                height: "100%",
+                background: scoreColor,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: `${position}%`,
+                top: "50%",
+                transform: "translate(-50%,-50%)",
+                width: 3,
+                height: 18,
+                background: scoreColor,
+              }}
+            />
+          </div>
           <div
             style={{
               display: "flex",
-              flex: 1,
-              flexDirection: "column",
-              gap: 20,
+              justifyContent: "space-between",
+              marginTop: 4,
             }}
           >
-            {/* Summary */}
-            <p
-              style={{
-                fontSize: 18,
-                lineHeight: 1.55,
-                color: "#c0c0d0",
-              }}
-            >
-              {summary}
-            </p>
-
-            {/* Conviction meters */}
-            <div style={{ display: "flex", gap: 24 }}>
-              {/* Bull */}
-              <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: 4,
-                  }}
-                >
-                  <span style={{ fontSize: 12, color: "#8888a0" }}>Bull Conviction</span>
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontFamily: "monospace",
-                      fontWeight: "bold",
-                      color: "#22c55e",
-                    }}
-                  >
-                    {bullConviction}%
-                  </span>
-                </div>
-                <div
-                  style={{
-                    height: 6,
-                    background: "#1e1e2e",
-                    display: "flex",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${bullConviction}%`,
-                      background: "#22c55e",
-                    }}
-                  />
-                </div>
-              </div>
-              {/* Bear */}
-              <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: 4,
-                  }}
-                >
-                  <span style={{ fontSize: 12, color: "#8888a0" }}>Bear Conviction</span>
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontFamily: "monospace",
-                      fontWeight: "bold",
-                      color: "#ef4444",
-                    }}
-                  >
-                    {bearConviction}%
-                  </span>
-                </div>
-                <div
-                  style={{
-                    height: 6,
-                    background: "#1e1e2e",
-                    display: "flex",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${bearConviction}%`,
-                      background: "#ef4444",
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Market data row */}
-            {hasMarketData && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: 32,
-                  padding: "12px 16px",
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                {trial.price_usd ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    <span style={{ fontSize: 10, color: "#555570", textTransform: "uppercase", letterSpacing: 1 }}>
-                      Price
-                    </span>
-                    <span style={{ fontSize: 16, fontFamily: "monospace", fontWeight: 600, color: "#f0f0f5" }}>
-                      {formatPrice(trial.price_usd)}
-                    </span>
-                  </div>
-                ) : null}
-                {trial.mcap_usd ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    <span style={{ fontSize: 10, color: "#555570", textTransform: "uppercase", letterSpacing: 1 }}>
-                      Market Cap
-                    </span>
-                    <span style={{ fontSize: 16, fontFamily: "monospace", fontWeight: 600, color: "#f0f0f5" }}>
-                      {formatUsd(trial.mcap_usd)}
-                    </span>
-                  </div>
-                ) : null}
-                {trial.liquidity_usd ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    <span style={{ fontSize: 10, color: "#555570", textTransform: "uppercase", letterSpacing: 1 }}>
-                      Liquidity
-                    </span>
-                    <span style={{ fontSize: 16, fontFamily: "monospace", fontWeight: 600, color: "#f0f0f5" }}>
-                      {formatUsd(trial.liquidity_usd)}
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-            )}
+            <span style={{ fontSize: 12, fontFamily: "monospace", color: "#555570" }}>-100</span>
+            <span style={{ fontSize: 12, fontFamily: "monospace", color: "#555570" }}>0</span>
+            <span style={{ fontSize: 12, fontFamily: "monospace", color: "#555570" }}>+100</span>
           </div>
         </div>
+
+        {/* Summary */}
+        <p
+          style={{
+            fontSize: 24,
+            lineHeight: 1.6,
+            color: "#c0c0d0",
+            marginBottom: 36,
+          }}
+        >
+          {summary}
+        </p>
+
+        {/* Conviction meters — stacked */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, marginBottom: 0 }}>
+          {/* Bull */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <span style={{ fontSize: 16, color: "#8888a0" }}>Bull Conviction</span>
+              <span
+                style={{
+                  fontSize: 16,
+                  fontFamily: "monospace",
+                  fontWeight: "bold",
+                  color: "#22c55e",
+                }}
+              >
+                {bullConviction}%
+              </span>
+            </div>
+            <div
+              style={{
+                height: 10,
+                background: "#1e1e2e",
+                display: "flex",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  width: `${bullConviction}%`,
+                  background: "#22c55e",
+                }}
+              />
+            </div>
+          </div>
+          {/* Bear */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <span style={{ fontSize: 16, color: "#8888a0" }}>Bear Conviction</span>
+              <span
+                style={{
+                  fontSize: 16,
+                  fontFamily: "monospace",
+                  fontWeight: "bold",
+                  color: "#ef4444",
+                }}
+              >
+                {bearConviction}%
+              </span>
+            </div>
+            <div
+              style={{
+                height: 10,
+                background: "#1e1e2e",
+                display: "flex",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  width: `${bearConviction}%`,
+                  background: "#ef4444",
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Market data row */}
+        {hasMarketData && (
+          <div
+            style={{
+              display: "flex",
+              gap: 48,
+              padding: "20px 24px",
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              marginTop: "auto",
+            }}
+          >
+            {trial.price_usd ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 13, color: "#555570", textTransform: "uppercase", letterSpacing: 1 }}>
+                  Price
+                </span>
+                <span style={{ fontSize: 22, fontFamily: "monospace", fontWeight: 600, color: "#f0f0f5" }}>
+                  {formatPrice(trial.price_usd)}
+                </span>
+              </div>
+            ) : null}
+            {trial.mcap_usd ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 13, color: "#555570", textTransform: "uppercase", letterSpacing: 1 }}>
+                  Market Cap
+                </span>
+                <span style={{ fontSize: 22, fontFamily: "monospace", fontWeight: 600, color: "#f0f0f5" }}>
+                  {formatUsd(trial.mcap_usd)}
+                </span>
+              </div>
+            ) : null}
+            {trial.liquidity_usd ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 13, color: "#555570", textTransform: "uppercase", letterSpacing: 1 }}>
+                  Liquidity
+                </span>
+                <span style={{ fontSize: 22, fontFamily: "monospace", fontWeight: 600, color: "#f0f0f5" }}>
+                  {formatUsd(trial.liquidity_usd)}
+                </span>
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     ),
     {
-      width: 1200,
-      height: 630,
+      width: 1080,
+      height: 1080,
       emoji: "twemoji",
     }
   );
