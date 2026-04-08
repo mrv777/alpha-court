@@ -16,18 +16,20 @@ import type {
 
 // ── Cache TTLs (seconds) ────────────────────────────────────────────
 
+const SEVEN_DAYS = 604800;
+
 export const TTL = {
-  TOKEN_INFO: 300, // 5 min
-  OHLCV: 300, // 5 min
-  WHO_BOUGHT_SOLD: 600, // 10 min
-  DEX_TRADES: 600, // 10 min
-  SM_NETFLOW: 600, // 10 min
-  SM_DEX_TRADES: 600, // 10 min
-  HOLDERS: 900, // 15 min
-  FLOWS: 900, // 15 min
-  FLOW_INTELLIGENCE: 900, // 15 min
-  PROFILER: 1800, // 30 min
-  SEARCH: 300, // 5 min
+  TOKEN_INFO: SEVEN_DAYS,
+  OHLCV: SEVEN_DAYS,
+  WHO_BOUGHT_SOLD: SEVEN_DAYS,
+  DEX_TRADES: SEVEN_DAYS,
+  SM_NETFLOW: SEVEN_DAYS,
+  SM_DEX_TRADES: SEVEN_DAYS,
+  HOLDERS: SEVEN_DAYS,
+  FLOWS: SEVEN_DAYS,
+  FLOW_INTELLIGENCE: SEVEN_DAYS,
+  PROFILER: SEVEN_DAYS,
+  SEARCH: SEVEN_DAYS,
 } as const;
 
 // ── Bull Endpoints ──────────────────────────────────────────────────

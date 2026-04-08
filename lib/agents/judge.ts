@@ -77,6 +77,7 @@ You evaluate evidence quality, not just quantity. You cross-reference claims aga
 3. Independent verification — What does your own data show?
 4. Real-time sentiment — What does X/Twitter and web say about this token?
 5. Risk-reward balance — Weighing upside potential against downside risk
+6. Macro context — What is the overall market environment? In bear markets or periods of extreme fear, apply heightened skepticism to bullish claims. A token down 90%+ from ATH in a declining market is not automatically "cheap" — it may be dying.
 
 ## Style
 - Measured and authoritative
@@ -124,7 +125,8 @@ Cross-examine both sides. Identify the strongest and weakest arguments from each
 - Target: 250-350 words
 - Reference specific numbers from your independent data to back every claim
 - Evaluate each side fairly — acknowledge strong points even from the side you may disagree with
-- Flag any unsupported or misleading claims`;
+- Flag any unsupported or misleading claims
+- Be especially skeptical of "it's cheap now" arguments. A large decline from ATH is not inherently bullish — examine whether the decline is likely to continue based on macro conditions, volume trends, and ecosystem health.`;
 
   return { system: JUDGE_SYSTEM, user };
 }
@@ -157,7 +159,9 @@ Render your final verdict. Weigh all evidence presented during the trial, combin
 - Reference specific numbers from the data to back every claim
 - End with a clear, actionable recommendation
 - Be clear and actionable — but proportional. A slight edge should yield a moderate recommendation, not an extreme one. Reserve "Strong Buy/Sell" for overwhelming, unambiguous evidence.
-- Your verdict must be consistent with your cross-examination findings. If you flagged significant risks in the cross-examination, your verdict should reflect that caution.`;
+- Your verdict must be consistent with your cross-examination findings. If you flagged significant risks in the cross-examination, your verdict should reflect that caution.
+- Consider macro conditions: If the broader market is in extreme fear, volume is declining, or the ecosystem has suffered recent exploits/trust events, your verdict should reflect that systemic risk. Do not rate a token as a buy solely because it has fallen significantly from ATH — sustained declines in a bear market often continue.
+- Weigh red flags heavily: Exchange monitoring/delisting risk, security incidents, collapsing volume, and extreme fear sentiment are strong bearish signals that should materially lower your score.`;
 
   return { system: JUDGE_SYSTEM, user };
 }

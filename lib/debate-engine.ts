@@ -410,8 +410,8 @@ export async function runDebate(
     const bearOpeningPrompt = buildBearOpeningPrompt(bearData, tokenName);
 
     const [bullOpeningText, bearOpeningText] = await Promise.all([
-      streamAgentWithRetry("bull", "opening", BULL_MODEL, bullOpeningPrompt.system, bullOpeningPrompt.user, emit, { targetWords: 300 }),
-      streamAgentWithRetry("bear", "opening", BEAR_MODEL, bearOpeningPrompt.system, bearOpeningPrompt.user, emit, { targetWords: 300 }),
+      streamAgentWithRetry("bull", "opening", BULL_MODEL, bullOpeningPrompt.system, bullOpeningPrompt.user, emit, { tools: getJudgeTools(), targetWords: 300 }),
+      streamAgentWithRetry("bear", "opening", BEAR_MODEL, bearOpeningPrompt.system, bearOpeningPrompt.user, emit, { tools: getJudgeTools(), targetWords: 300 }),
     ]);
 
     const bullOpening = bullOpeningText ?? "";
@@ -442,7 +442,7 @@ export async function runDebate(
       const text = await streamAgentWithRetry(
         "bear", "rebuttal", BEAR_MODEL,
         bearRebuttalPrompt.system, bearRebuttalPrompt.user,
-        emit, { targetWords: 200 }
+        emit, { tools: getJudgeTools(), targetWords: 200 }
       );
       bearRebuttal = text ?? "";
     }
@@ -460,7 +460,7 @@ export async function runDebate(
       const text = await streamAgentWithRetry(
         "bull", "rebuttal", BULL_MODEL,
         bullRebuttalPrompt.system, bullRebuttalPrompt.user,
-        emit, { targetWords: 200 }
+        emit, { tools: getJudgeTools(), targetWords: 200 }
       );
       bullRebuttal = text ?? "";
     }

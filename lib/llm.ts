@@ -6,7 +6,7 @@ import { log } from "@/lib/logger";
 // ── Models ─────────────────────────────────────────────────────────────
 
 export const FAST = "grok-4-1-fast-non-reasoning" as const;
-export const REASONING = "grok-4-1-fast-reasoning" as const;
+export const REASONING = "grok-4.20-reasoning" as const;
 
 // ── Provider ───────────────────────────────────────────────────────────
 
