@@ -12,10 +12,9 @@
 
 Payment uses the x402 protocol. Only POST /api/trial requires payment. All other endpoints are free.
 
-- Payment token: USDC
-- Network: eip155:84532 (Base Sepolia testnet) or eip155:8453 (Base mainnet)
-- Facilitator: https://x402.org/facilitator
-- Discovery: GET /.well-known/x402 returns machine-readable JSON with current pricing and config
+- Payment token: USDC on Base
+- Network: eip155:8453 (Base mainnet)
+- Discovery: GET /.well-known/x402 returns machine-readable JSON with current network, facilitator URL, and pricing
 
 To pay, use the @x402/fetch SDK to wrap fetch with automatic payment handling:
 
@@ -53,7 +52,7 @@ Responses:
 - 409: { "error": "Trial creation conflict, please retry" }
 
 Notes:
-- Free users have a 2-hour cooldown per token+chain combination
+- Free users have a cooldown per token+chain combination (check 429 response for exact duration)
 - Paid requests (via x402) bypass the cooldown entirely
 - Block explorer URLs (solscan.io, etherscan.io, basescan.org) are auto-parsed to extract addresses
 
@@ -129,7 +128,7 @@ Response (200):
   "trials": [
     {
       "id": "abc123",
-      "token_address": "So11...",
+      "token_address": "EKpQ...",
       "token_symbol": "WIF",
       "token_name": "dogwifhat",
       "chain": "solana",
@@ -154,11 +153,11 @@ Response (200):
 {
   "results": [
     {
-      "token_address": "So11...",
+      "token_address": "EKpQ...",
       "token_symbol": "WIF",
       "token_name": "dogwifhat",
       "chain": "solana",
-      "market_cap_usd": 78000000000,
+      "market_cap_usd": 780000000,
       "source": "nansen"
     }
   ],

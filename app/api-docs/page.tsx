@@ -12,7 +12,7 @@ const network = NETWORK;
 const facilitatorUrl = FACILITATOR_URL;
 
 export default function ApiDocsPage() {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://alphacourt.example";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://alpha.cookd.wtf";
 
   return (
     <main className="flex flex-1 flex-col items-center px-4 pt-16 pb-12">
@@ -105,7 +105,7 @@ export default function ApiDocsPage() {
               description="List recent completed trials. Use the returned trialIds to fetch verdicts. Limit defaults to 10, max 50."
               responseBody={`{
   "trials": [
-    { "id": "abc123", "token_address": "So11...", "token_symbol": "SOL",
+    { "id": "abc123", "token_address": "EKpQ...", "token_symbol": "WIF",
       "chain": "solana", "verdict_label": "Buy", "verdict_score": 42, ... }
   ],
   "count": 10
@@ -113,14 +113,14 @@ export default function ApiDocsPage() {
             />
             <EndpointCard
               method="GET"
-              path="/api/token/search?q=sol&chain=solana"
+              path="/api/token/search?q=wif&chain=solana"
               price="Free"
               description="Search tokens by name, symbol, or address. Returns up to 10 results. Chains: solana, base, ethereum."
               responseBody={`{
   "results": [
-    { "token_address": "So11...", "token_symbol": "SOL",
-      "token_name": "Wrapped SOL", "chain": "solana",
-      "market_cap_usd": 78000000000, "source": "nansen" }
+    { "token_address": "EKpQ...", "token_symbol": "WIF",
+      "token_name": "dogwifhat", "chain": "solana",
+      "market_cap_usd": 780000000, "source": "nansen" }
   ],
   "source": "nansen"
 }`}

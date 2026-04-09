@@ -119,7 +119,9 @@ User pastes token address
 
 ## API for Agents (x402)
 
-Alpha Court exposes a pay-per-use API via the [x402 protocol](https://x402.org). AI agents can analyze any token by making a single USDC micropayment — no API keys or subscriptions needed.
+**Live at [alpha.cookd.wtf](https://alpha.cookd.wtf)**
+
+Alpha Court exposes a pay-per-use API via the [x402 protocol](https://x402.org). AI agents can analyze any token by making a single USDC micropayment on Base — no API keys or subscriptions needed.
 
 | Endpoint | Method | Cost |
 |----------|--------|------|
@@ -131,7 +133,7 @@ Alpha Court exposes a pay-per-use API via the [x402 protocol](https://x402.org).
 
 **Agent discovery:** `GET /.well-known/x402` returns a machine-readable JSON describing all endpoints, pricing, and payment configuration.
 
-**Full documentation:** See `/api-docs` for integration examples and SSE event schemas.
+**Full documentation:** See [`/api-docs`](https://alpha.cookd.wtf/api-docs) for integration examples and SSE event schemas.
 
 Configure x402 via environment variables — see `.env.example` for all options.
 
