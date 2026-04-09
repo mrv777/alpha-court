@@ -42,11 +42,15 @@ export async function GET(
   if (trial.status !== "completed" || trial.verdict_score === null) {
     return Response.json(
       {
-        error: "Trial not completed",
+        pending: true,
         status: trial.status,
         trialId: trial.id,
+        hint: "Trial is still in progress. Stream GET /api/debate/{trialId} for live updates, or poll this endpoint.",
       },
-      { status: 404 }
+      {
+        status: 202,
+        headers: { "Retry-After": "10" },
+      }
     );
   }
 

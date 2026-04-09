@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TRIAL_PRICE, NETWORK, FACILITATOR_URL } from "@/lib/x402";
 
 export const metadata: Metadata = {
   title: "Alpha Court — API for Agents",
@@ -6,12 +7,9 @@ export const metadata: Metadata = {
     "Pay-per-use API for AI agents via the x402 protocol. Get on-chain token verdicts with USDC micropayments.",
 };
 
-const costCents = Number(process.env.X402_COST_CENTS || "100");
-const network = process.env.X402_NETWORK || "eip155:84532";
-const facilitatorUrl =
-  process.env.X402_FACILITATOR_URL || "https://x402.org/facilitator";
-
-const trialPrice = `$${(costCents / 100).toFixed(2)}`;
+const trialPrice = TRIAL_PRICE;
+const network = NETWORK;
+const facilitatorUrl = FACILITATOR_URL;
 
 export default function ApiDocsPage() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://alphacourt.example";
@@ -89,6 +87,16 @@ export default function ApiDocsPage() {
   "tokenSymbol": "SOL"
 }`}
               responseBody={`{ "trialId": "abc123xyz", "cooldown": false }`}
+              errors={`429 — Cooldown active (Retry-After header set)
+  { "cooldown": true, "trialId": "...", "remainingSeconds": 3600,
+    "hint": "Pay via x402 to bypass cooldown" }
+
+400 — Invalid request
+  { "error": "tokenAddress is required" }
+  { "error": "Invalid solana address format" }
+
+409 — Creation conflict (retry)
+  { "error": "Trial creation conflict, please retry" }`}
             />
             <EndpointCard
               method="GET"
@@ -105,13 +113,40 @@ export default function ApiDocsPage() {
             />
             <EndpointCard
               method="GET"
+              path="/api/token/search?q=sol&chain=solana"
+              price="Free"
+              description="Search tokens by name, symbol, or address. Returns up to 10 results. Chains: solana, base, ethereum."
+              responseBody={`{
+  "results": [
+    { "token_address": "So11...", "token_symbol": "SOL",
+      "token_name": "Wrapped SOL", "chain": "solana",
+      "market_cap_usd": 78000000000, "source": "nansen" }
+  ],
+  "source": "nansen"
+}`}
+            />
+            <EndpointCard
+              method="GET"
               path="/api/debate/{trialId}"
               price="Free"
-              description="Stream the live debate via Server-Sent Events."
-              responseBody={`event: bull_opening
-data: {"content": "Based on smart money..."}\n
+              description="Stream the live debate via Server-Sent Events. Events arrive in order: phase markers, agent messages with evidence, token stats, and finally the verdict."
+              responseBody={`event: phase
+data: {"phase":"bull_opening","status":"complete"}
+
+event: message_complete
+data: {"agent":"bull","phase":"opening","content":"...","evidence":[{"endpoint":"smart-money netflow","displayValue":"..."}]}
+
+event: token_stats
+data: {"tokenIconUrl":"...","priceUsd":1.23,"mcapUsd":1000000,"liquidityUsd":500000}
+
 event: verdict
-data: {"score": 42, "label": "Buy"}`}
+data: {"score":42,"label":"Buy","summary":"...","bull_conviction":78,"bear_conviction":35,"safety":"clean"}
+
+event: error
+data: {"message":"...","recoverable":false}
+
+event: done
+data: {}`}
             />
             <EndpointCard
               method="GET"
@@ -121,10 +156,19 @@ data: {"score": 42, "label": "Buy"}`}
               responseBody={`{
   "score": 42,
   "label": "Buy",
+  "summary": "Based on strong smart money inflows...",
   "bullConviction": 78,
   "bearConviction": 35,
-  ...
+  "safety": "clean",
+  "createdAt": 1712750000,
+  "completedAt": 1712750080
 }`}
+              errors={`202 — Trial in progress (Retry-After: 10)
+  { "pending": true, "status": "debating", "trialId": "...",
+    "hint": "Stream GET /api/debate/{trialId} for live updates" }
+
+404 — Trial not found
+  { "error": "Trial not found" }`}
             />
           </div>
         </section>
@@ -188,6 +232,19 @@ const result = await verdict.json();`}
           </div>
         </section>
 
+        {/* Agent discovery */}
+        <section>
+          <h2 className="font-heading text-lg font-semibold text-court-text mb-4">
+            Agent discovery
+          </h2>
+          <p className="text-sm text-court-text-muted">
+            For machine-readable service discovery, fetch{" "}
+            <code className="text-judge">GET /.well-known/x402</code> — it
+            returns a JSON document with all endpoints, pricing, payment config,
+            and the recommended workflow.
+          </p>
+        </section>
+
         <footer className="text-center text-xs text-court-text-dim pt-4">
           Powered by the{" "}
           <a
@@ -211,6 +268,7 @@ function EndpointCard({
   description,
   requestBody,
   responseBody,
+  errors,
 }: {
   method: string;
   path: string;
@@ -218,6 +276,7 @@ function EndpointCard({
   description: string;
   requestBody?: string;
   responseBody?: string;
+  errors?: string;
 }) {
   const methodColor =
     method === "POST"
@@ -249,6 +308,14 @@ function EndpointCard({
           <p className="text-xs text-court-text-dim mb-1">Response</p>
           <pre className="overflow-x-auto bg-black/30 p-2 text-xs font-mono text-court-text-muted">
             {responseBody}
+          </pre>
+        </div>
+      )}
+      {errors && (
+        <div>
+          <p className="text-xs text-court-text-dim mb-1">Error responses</p>
+          <pre className="overflow-x-auto bg-black/30 p-2 text-xs font-mono text-court-text-muted">
+            {errors}
           </pre>
         </div>
       )}

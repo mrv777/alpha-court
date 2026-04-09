@@ -86,16 +86,24 @@ export async function POST(request: Request) {
 
   if (existingTrial && !isPaidRequest(request)) {
     const cooldownEndsAt = existingTrial.created_at + COOLDOWN_SECONDS;
-    return Response.json({
-      cooldown: true,
-      trialId: existingTrial.id,
-      status: existingTrial.status,
-      verdictScore: existingTrial.verdict_score,
-      verdictLabel: existingTrial.verdict_label,
-      cooldownEndsAt,
-      remainingSeconds: cooldownEndsAt - now,
-      cooldownTotal: COOLDOWN_SECONDS,
-    });
+    const remainingSeconds = cooldownEndsAt - now;
+    return Response.json(
+      {
+        cooldown: true,
+        trialId: existingTrial.id,
+        status: existingTrial.status,
+        verdictScore: existingTrial.verdict_score,
+        verdictLabel: existingTrial.verdict_label,
+        cooldownEndsAt,
+        remainingSeconds,
+        cooldownTotal: COOLDOWN_SECONDS,
+        hint: "Pay via x402 to bypass cooldown",
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(remainingSeconds) },
+      }
+    );
   }
 
   // Create new trial

@@ -6,14 +6,14 @@ import type { Network } from "@x402/core/types";
 // ---------------------------------------------------------------------------
 // Single cost control — adjust X402_COST_CENTS to set the trial price
 // ---------------------------------------------------------------------------
-const costCents = Number(process.env.X402_COST_CENTS || "100");
+export const COST_CENTS = Number(process.env.X402_COST_CENTS || "100");
 
-export const TRIAL_PRICE = `$${(costCents / 100).toFixed(2)}`;
+export const TRIAL_PRICE = `$${(COST_CENTS / 100).toFixed(2)}`;
 
 const walletAddress = process.env.X402_WALLET_ADDRESS || "";
-const facilitatorUrl =
+export const FACILITATOR_URL =
   process.env.X402_FACILITATOR_URL || "https://x402.org/facilitator";
-const network = (process.env.X402_NETWORK || "eip155:84532") as Network;
+export const NETWORK = (process.env.X402_NETWORK || "eip155:84532") as Network;
 
 export function isX402Enabled(): boolean {
   return process.env.X402_ENABLED === "true" && walletAddress !== "";
@@ -32,7 +32,7 @@ function makeRouteConfig(price: string, description: string): RouteConfig {
     accepts: {
       scheme: "exact",
       price,
-      network,
+      network: NETWORK,
       payTo: walletAddress,
     },
     description,
@@ -46,10 +46,10 @@ let _server: x402ResourceServer | null = null;
 export function getX402Server(): x402ResourceServer {
   if (!_server) {
     const facilitatorClient = new HTTPFacilitatorClient({
-      url: facilitatorUrl,
+      url: FACILITATOR_URL,
     });
     _server = new x402ResourceServer(facilitatorClient);
-    _server.register(network, new ExactEvmScheme());
+    _server.register(NETWORK, new ExactEvmScheme());
   }
   return _server;
 }
