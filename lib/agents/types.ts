@@ -34,6 +34,7 @@ export interface BullData {
   profilerPnl: ProfilerPnlSummary | null;
   dexScreener: DexScreenerTokenData | null;
   jupiterPrice: JupiterPriceData | null;
+  security: GoPlusResult | null;
 }
 
 export interface BearData {
@@ -43,6 +44,7 @@ export interface BearData {
   tokenFlows: TokenFlow[] | null;
   dexScreener: DexScreenerTokenData | null;
   security: GoPlusResult | null;
+  jupiterPrice: JupiterPriceData | null;
 }
 
 export interface JudgeData {

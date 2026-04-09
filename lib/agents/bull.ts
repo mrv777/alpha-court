@@ -6,6 +6,7 @@ import {
 } from "@/lib/nansen/endpoints";
 import { getDexScreenerToken } from "@/lib/data/dexscreener";
 import { getJupiterPrice } from "@/lib/data/jupiter";
+import { checkTokenSecurity } from "@/lib/data/goplus";
 import { log } from "@/lib/logger";
 import type { BullData } from "./types";
 import { FAST } from "@/lib/llm";
@@ -36,7 +37,7 @@ export async function fetchBullData(
   chain: string
 ): Promise<BullData> {
   const start = Date.now();
-  const [smNetflow, whoBought, flowIntelligence, profilerPnl, dexScreener, jupiterPrice] =
+  const [smNetflow, whoBought, flowIntelligence, profilerPnl, dexScreener, jupiterPrice, security] =
     await Promise.all([
       timed("smart-money-netflow", () => getSmNetflow(chain, tokenAddress).then((r) => (r.success ? r.data : null))),
       timed("who-bought-sold-buy", () => getWhoBoughtSold(chain, tokenAddress, "buy").then((r) => (r.success ? r.data : null))),
@@ -53,10 +54,11 @@ export async function fetchBullData(
       ),
       timed("dexscreener-bull", () => getDexScreenerToken(tokenAddress, chain).then((r) => (r.success ? r.data : null))),
       timed("jupiter-price", () => getJupiterPrice(tokenAddress).then((r) => (r.success ? r.data : null))),
+      timed("goplus-security", () => checkTokenSecurity(tokenAddress).then((r) => (r.success ? r.data : null))),
     ]);
   log.info("bull fetchBullData complete", { durationMs: Date.now() - start });
 
-  return { smNetflow, whoBought, flowIntelligence, profilerPnl, dexScreener, jupiterPrice };
+  return { smNetflow, whoBought, flowIntelligence, profilerPnl, dexScreener, jupiterPrice, security };
 }
 
 // ── Prompt helpers ─────────────────────────────────────────────────────
@@ -80,6 +82,7 @@ You advocate for the bullish case. You find opportunity where others see risk. Y
 2. Capital flow momentum — Compare net_flow_24h_usd vs net_flow_7d_usd vs net_flow_30d_usd to show acceleration. Highlight fresh_wallets_net_flow_usd and smart_trader_net_flow_usd from flow intelligence.
 3. Market structure — Price, volume, liquidity from DexScreener supporting upside? Are priceChangeH1/H6/H24 showing accelerating momentum?
 4. Track record — Do top buyers have high win_rate and realized_pnl_usd?
+5. Security posture — Review GoPlus security data. If the token is clean, use it to strengthen your case. If there are flags, acknowledge them honestly and explain why they're acceptable or mitigated.
 
 ## Tools
 You have access to web_search and x_search tools. Use them to find recent news, project announcements, partnerships, exchange listings, or positive sentiment on X/Twitter that supports your bullish case. On-chain data is your primary evidence — search supplements it with real-time context.
@@ -87,7 +90,7 @@ You have access to web_search and x_search tools. Use them to find recent news, 
 ## Style
 - Confident but analytical, not reckless
 - Lead with your strongest data points
-- Acknowledge risks briefly only to reframe them as opportunities
+- Acknowledge risks (including security flags) to reframe them as opportunities or explain why they're manageable
 - Use specific numbers, not vague claims`;
 
 // ── Opening prompt ─────────────────────────────────────────────────────
@@ -103,6 +106,7 @@ export function buildBullOpeningPrompt(
     formatDataSection("Top Buyer PnL Profile (profiler-pnl)", data.profilerPnl),
     formatDataSection("DexScreener Market Data (dexscreener)", data.dexScreener),
     formatDataSection("Jupiter Real-Time Price (jupiter)", data.jupiterPrice),
+    formatDataSection("Security Analysis (goplus)", data.security),
   ];
 
   const user = `## Token: ${tokenName}
@@ -132,6 +136,7 @@ export function buildBullRebuttalPrompt(
     formatDataSection("Top Buyer PnL Profile (profiler-pnl)", data.profilerPnl),
     formatDataSection("DexScreener Market Data (dexscreener)", data.dexScreener),
     formatDataSection("Jupiter Real-Time Price (jupiter)", data.jupiterPrice),
+    formatDataSection("Security Analysis (goplus)", data.security),
   ];
 
   const user = `## The Bear's Opening Argument

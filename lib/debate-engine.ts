@@ -268,6 +268,7 @@ const BULL_ENDPOINTS: DataEndpoint[] = [
   { name: "profiler-pnl (buyers)", agent: "bull" },
   { name: "dexscreener (bull)", agent: "bull" },
   { name: "jupiter-price", agent: "bull" },
+  { name: "goplus-security (bull)", agent: "bull" },
 ];
 
 const BEAR_ENDPOINTS: DataEndpoint[] = [
@@ -277,6 +278,7 @@ const BEAR_ENDPOINTS: DataEndpoint[] = [
   { name: "token-flows (whale)", agent: "bear" },
   { name: "dexscreener (bear)", agent: "bear" },
   { name: "goplus-security", agent: "bear" },
+  { name: "jupiter-price (bear)", agent: "bear" },
 ];
 
 const JUDGE_ENDPOINTS: DataEndpoint[] = [
@@ -342,7 +344,7 @@ export async function runDebate(
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "error" });
       }
       log.error("bull data fetch failed", { trialId, durationMs: Date.now() - gatherStart, error: bullResult.reason instanceof Error ? bullResult.reason.message : String(bullResult.reason) });
-      bullData = { smNetflow: null, whoBought: null, flowIntelligence: null, profilerPnl: null, dexScreener: null, jupiterPrice: null };
+      bullData = { smNetflow: null, whoBought: null, flowIntelligence: null, profilerPnl: null, dexScreener: null, jupiterPrice: null, security: null };
     }
 
     let bearData: BearData;
@@ -357,7 +359,7 @@ export async function runDebate(
         emit({ type: "data_progress", endpoint: ep.name, agent: ep.agent, status: "error" });
       }
       log.error("bear data fetch failed", { trialId, durationMs: Date.now() - gatherStart, error: bearResult.reason instanceof Error ? bearResult.reason.message : String(bearResult.reason) });
-      bearData = { dexTrades: null, holders: null, smDexTrades: null, tokenFlows: null, dexScreener: null, security: null };
+      bearData = { dexTrades: null, holders: null, smDexTrades: null, tokenFlows: null, dexScreener: null, security: null, jupiterPrice: null };
     }
 
     // Judge fetches after Bull+Bear (judge data not needed until cross-exam)

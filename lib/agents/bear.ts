@@ -6,6 +6,7 @@ import {
 } from "@/lib/nansen/endpoints";
 import { getDexScreenerToken } from "@/lib/data/dexscreener";
 import { checkTokenSecurity } from "@/lib/data/goplus";
+import { getJupiterPrice } from "@/lib/data/jupiter";
 import { log } from "@/lib/logger";
 import type { BearData } from "./types";
 import { FAST } from "@/lib/llm";
@@ -36,7 +37,7 @@ export async function fetchBearData(
   chain: string
 ): Promise<BearData> {
   const start = Date.now();
-  const [dexTrades, holders, smDexTrades, tokenFlows, dexScreener, security] =
+  const [dexTrades, holders, smDexTrades, tokenFlows, dexScreener, security, jupiterPrice] =
     await Promise.all([
       timed("token-dex-trades", () => getTokenDexTrades(chain, tokenAddress).then((r) => (r.success ? r.data : null))),
       timed("token-holders", () => getTokenHolders(chain, tokenAddress).then((r) => (r.success ? r.data : null))),
@@ -44,10 +45,11 @@ export async function fetchBearData(
       timed("token-flows-whale", () => getTokenFlows(chain, tokenAddress, "whale").then((r) => (r.success ? r.data : null))),
       timed("dexscreener-bear", () => getDexScreenerToken(tokenAddress, chain).then((r) => (r.success ? r.data : null))),
       timed("goplus-security", () => checkTokenSecurity(tokenAddress).then((r) => (r.success ? r.data : null))),
+      timed("jupiter-price", () => getJupiterPrice(tokenAddress).then((r) => (r.success ? r.data : null))),
     ]);
   log.info("bear fetchBearData complete", { durationMs: Date.now() - start });
 
-  return { dexTrades, holders, smDexTrades, tokenFlows, dexScreener, security };
+  return { dexTrades, holders, smDexTrades, tokenFlows, dexScreener, security, jupiterPrice };
 }
 
 // ── Prompt helpers ─────────────────────────────────────────────────────
@@ -72,6 +74,7 @@ You protect traders from bad entries. You find the risks that others overlook. Y
 3. Smart money exits — Are trader_address_label'd wallets (whales, smart traders) net sellers?
 4. Security red flags — Are there on-chain risks from GoPlus (freeze authority, hidden fees, mutable balances)?
 5. Liquidity and volume health — Is DexScreener liquidity thin relative to market cap? Can large holders exit safely? Are priceChangeH1/H6/H24 showing a dump or fading momentum?
+6. Price context — Use Jupiter real-time price and DexScreener momentum data. If price is pumping, explain why it's unsustainable or a distribution event. If price is already down, frame it as confirmation of your thesis.
 
 ## Tools
 You have access to web_search and x_search tools. Use them to find recent negative news, security incidents, team controversies, exchange delistings, or bearish sentiment on X/Twitter that supports your case. On-chain data is your primary evidence — search supplements it with real-time context.
@@ -95,6 +98,7 @@ export function buildBearOpeningPrompt(
     formatDataSection("Whale Flow Patterns (token-flows)", data.tokenFlows),
     formatDataSection("DexScreener Market Data (dexscreener)", data.dexScreener),
     formatDataSection("Security Analysis (goplus)", data.security),
+    formatDataSection("Jupiter Real-Time Price (jupiter)", data.jupiterPrice),
   ];
 
   const user = `## Token: ${tokenName}
@@ -124,6 +128,7 @@ export function buildBearRebuttalPrompt(
     formatDataSection("Whale Flow Patterns (token-flows)", data.tokenFlows),
     formatDataSection("DexScreener Market Data (dexscreener)", data.dexScreener),
     formatDataSection("Security Analysis (goplus)", data.security),
+    formatDataSection("Jupiter Real-Time Price (jupiter)", data.jupiterPrice),
   ];
 
   const user = `## The Bull's Opening Argument

@@ -105,6 +105,7 @@ describe("buildBullOpeningPrompt", () => {
     profilerPnl: null,
     dexScreener: { priceUsd: 0.00034, liquidityUsd: 500000, volume24hUsd: 1200000, priceChangeH1: 2.5, priceChangeH6: -1.2, priceChangeH24: 15.2, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-06-01T00:00:00Z", imageUrl: null },
     jupiterPrice: { usdPrice: 0.00034, priceChange24h: 15.2 },
+    security: { safe: true, reasons: [] },
   };
 
   it("includes token name", () => {
@@ -143,7 +144,7 @@ describe("buildBullOpeningPrompt", () => {
 describe("buildBullRebuttalPrompt", () => {
   const sampleData: BullData = {
     smNetflow: [], whoBought: [], flowIntelligence: null,
-    profilerPnl: null, dexScreener: null, jupiterPrice: null,
+    profilerPnl: null, dexScreener: null, jupiterPrice: null, security: null,
   };
 
   it("includes bear's opening text", () => {

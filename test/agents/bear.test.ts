@@ -121,6 +121,7 @@ describe("buildBearOpeningPrompt", () => {
     tokenFlows: null,
     dexScreener: { priceUsd: 0.00034, liquidityUsd: 50000, volume24hUsd: 120000, priceChangeH1: -3.5, priceChangeH6: -8.1, priceChangeH24: -12.4, fdvUsd: 45000000, marketCapUsd: 30000000, pairCreatedAt: "2024-12-01T00:00:00Z", imageUrl: null },
     security: { safe: false, reasons: ["balance mutable authority active"] },
+    jupiterPrice: { usdPrice: 0.00034, priceChange24h: -12.4 },
   };
 
   it("includes token name", () => {
@@ -165,7 +166,7 @@ describe("buildBearOpeningPrompt", () => {
 describe("buildBearRebuttalPrompt", () => {
   const sampleData: BearData = {
     dexTrades: [], holders: [], smDexTrades: null,
-    tokenFlows: null, dexScreener: null, security: null,
+    tokenFlows: null, dexScreener: null, security: null, jupiterPrice: null,
   };
 
   it("includes bull's opening text", () => {

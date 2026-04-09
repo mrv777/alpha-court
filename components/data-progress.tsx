@@ -71,6 +71,8 @@ const ENDPOINT_LABELS: Record<string, string> = {
   "token-flows (whale)": "Monitoring whale movements",
   "dexscreener (bear)": "Checking liquidity depth",
   "goplus-security": "Running security audit",
+  "goplus-security (bull)": "Reviewing security posture",
+  "jupiter-price (bear)": "Checking price action",
   "token-info": "Reviewing token metadata",
   "token-ohlcv": "Charting price history",
   "who-bought-sold (sell)": "Identifying recent sellers",

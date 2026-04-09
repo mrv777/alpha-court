@@ -182,7 +182,7 @@ describe("runDebate", () => {
 
     // All should be complete (no errors in default mocks)
     const completeEvents = dataEvents.filter((e) => e.status === "complete");
-    expect(completeEvents.length).toBe(16); // 6 bull + 6 bear + 4 judge
+    expect(completeEvents.length).toBe(18); // 7 bull + 7 bear + 4 judge
   });
 
   it("fetches Bull and Bear data in parallel (not sequential)", async () => {
@@ -257,13 +257,13 @@ describe("runDebate", () => {
     const bullErrors = events.filter(
       (e) => e.type === "data_progress" && (e as any).agent === "bull" && (e as any).status === "error"
     );
-    expect(bullErrors.length).toBe(6);
+    expect(bullErrors.length).toBe(7);
 
     // Bear should have complete progress events
     const bearCompletes = events.filter(
       (e) => e.type === "data_progress" && (e as any).agent === "bear" && (e as any).status === "complete"
     );
-    expect(bearCompletes.length).toBe(6);
+    expect(bearCompletes.length).toBe(7);
 
     // Should still complete the debate
     expect(events[events.length - 1].type).toBe("done");
@@ -419,7 +419,7 @@ describe("runDebate", () => {
     const bullErrors = events.filter(
       (e) => e.type === "data_progress" && (e as any).agent === "bull" && (e as any).status === "error"
     );
-    expect(bullErrors.length).toBe(6); // All 6 bull endpoints
+    expect(bullErrors.length).toBe(7); // All 7 bull endpoints
   });
 
   it("extracts evidence from citations in messages", async () => {

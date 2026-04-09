@@ -4,7 +4,7 @@
 
 Three AI agents — **The Bull**, **The Bear**, and **The Judge** — debate whether to buy a crypto token in real-time, each powered by different on-chain data from the **Nansen CLI**. Paste a token address, watch the trial unfold with real data citations, get a verdict, and share it.
 
-<!-- Add screenshots here: landing page, live debate, verdict page -->
+![Landing Page](public/screenshots/landing.png)
 
 ## How It Works
 
@@ -16,6 +16,11 @@ Three AI agents — **The Bull**, **The Bear**, and **The Judge** — debate whe
 6. **Verdict** — The Judge scores from -100 (Strong Sell) to +100 (Strong Buy) with conviction meters
 
 The entire debate streams live via SSE. Verdicts are shareable as OG image cards on Twitter.
+
+![Live Debate + Verdict](public/screenshots/debate.png)
+
+<p align="center"><strong>Shareable verdict card (auto-generated)</strong></p>
+<p align="center"><img src="public/screenshots/verdict-card.png" width="400" /></p>
 
 ## Nansen CLI Integration (14 Endpoints)
 
@@ -49,10 +54,12 @@ The entire debate streams live via SSE. Verdicts are shareable as OG image cards
 | 13 | `research search` | Token autocomplete on landing page |
 | 14 | `research token-info` | Token metadata for search results |
 
-### Supplementary Data Sources
+### Supplementary Data Sources (shared by Bull & Bear)
 - **DexScreener** — DEX price, volume, liquidity, FDV
 - **Jupiter API** — Real-time Solana token prices
 - **GoPlus Security** — On-chain safety flags (freeze authority, hidden fees, mintable, etc.)
+
+Both the Bull and Bear receive all supplementary data so they argue from the same facts — the debate is about interpretation, not information asymmetry.
 
 ## Tech Stack
 
@@ -85,7 +92,9 @@ User pastes token address
   │                                               │
   │  Phase 1: DATA GATHERING (parallel)           │
   │    Bull: 4 Nansen + DexScreener + Jupiter     │
+  │          + GoPlus                             │
   │    Bear: 4 Nansen + DexScreener + GoPlus      │
+  │          + Jupiter                            │
   │    Judge: 4 Nansen endpoints                  │
   │    (max 6 concurrent CLI calls)               │
   │                                               │
@@ -132,7 +141,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and put a token on trial.
+Open [http://localhost:3100](http://localhost:3100) and put a token on trial.
 
 ### Build for Production
 
@@ -140,10 +149,6 @@ Open [http://localhost:3000](http://localhost:3000) and put a token on trial.
 pnpm build
 pnpm start
 ```
-
-## Demo
-
-<!-- Add demo video link and X/Twitter post link here -->
 
 ---
 
