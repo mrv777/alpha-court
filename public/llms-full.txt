@@ -100,10 +100,10 @@ Responses:
 - 200: Verdict JSON
   {
     "id": "abc123",
-    "tokenAddress": "So11111111111111111111111111111111111111112",
+    "tokenAddress": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
     "chain": "solana",
-    "tokenName": "Wrapped SOL",
-    "tokenSymbol": "SOL",
+    "tokenName": "dogwifhat",
+    "tokenSymbol": "WIF",
     "score": 42,
     "label": "Buy",
     "summary": "Based on strong smart money inflows...",
@@ -130,8 +130,8 @@ Response (200):
     {
       "id": "abc123",
       "token_address": "So11...",
-      "token_symbol": "SOL",
-      "token_name": "Wrapped SOL",
+      "token_symbol": "WIF",
+      "token_name": "dogwifhat",
       "chain": "solana",
       "verdict_label": "Buy",
       "verdict_score": 42,
@@ -155,8 +155,8 @@ Response (200):
   "results": [
     {
       "token_address": "So11...",
-      "token_symbol": "SOL",
-      "token_name": "Wrapped SOL",
+      "token_symbol": "WIF",
+      "token_name": "dogwifhat",
       "chain": "solana",
       "market_cap_usd": 78000000000,
       "source": "nansen"

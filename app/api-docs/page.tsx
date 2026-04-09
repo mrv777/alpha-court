@@ -81,10 +81,10 @@ export default function ApiDocsPage() {
               price={trialPrice}
               description="Create a new debate trial for a token. Returns a trialId you can use to stream the debate and fetch the verdict."
               requestBody={`{
-  "tokenAddress": "So11111111111111111111111111111111111111112",
+  "tokenAddress": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
   "chain": "solana",
-  "tokenName": "Wrapped SOL",
-  "tokenSymbol": "SOL"
+  "tokenName": "dogwifhat",
+  "tokenSymbol": "WIF"
 }`}
               responseBody={`{ "trialId": "abc123xyz", "cooldown": false }`}
               errors={`429 — Cooldown active (Retry-After header set)
@@ -200,7 +200,7 @@ const trial = await fetch402("${appUrl}/api/trial", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    tokenAddress: "So11111111111111111111111111111111111111112",
+    tokenAddress: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
     chain: "solana",
   }),
 });

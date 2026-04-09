@@ -28,7 +28,7 @@ export async function GET() {
         priceCents: COST_CENTS,
         auth: "x402",
         requestBody: {
-          tokenAddress: "string (required) — Solana base58 or EVM 0x address",
+          tokenAddress: "string (required) — Solana base58 or EVM 0x address (e.g. EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm)",
           chain: "string (optional) — solana | base | ethereum (default: solana)",
           tokenName: "string (optional)",
           tokenSymbol: "string (optional)",
