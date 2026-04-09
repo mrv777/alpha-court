@@ -1,0 +1,166 @@
+# Alpha Court — Full API Reference
+
+> AI agents debate crypto tokens using on-chain data from Nansen. Pay per trial via x402 — no API keys or subscriptions, just USDC micropayments on Base.
+
+## Workflow
+
+1. POST /api/trial with a tokenAddress and chain (paid via x402 — $1.00 USDC)
+2. GET /api/debate/{trialId} to stream the live debate via SSE (free)
+3. GET /api/verdict/{trialId} to get the final verdict JSON (free)
+
+## Payment (x402)
+
+Payment uses the x402 protocol. Only POST /api/trial requires payment. All other endpoints are free.
+
+- Payment token: USDC
+- Network: eip155:84532 (Base Sepolia testnet) or eip155:8453 (Base mainnet)
+- Facilitator: https://x402.org/facilitator
+- Discovery: GET /.well-known/x402 returns machine-readable JSON with current pricing and config
+
+To pay, use the @x402/fetch SDK to wrap fetch with automatic payment handling:
+
+```
+npm install @x402/fetch @x402/core @x402/evm
+
+import { wrapFetch } from "@x402/fetch";
+import { x402Client } from "@x402/core/client";
+import { ExactEvmScheme } from "@x402/evm/exact/client";
+import { privateKeyToAccount } from "viem/accounts";
+
+const signer = privateKeyToAccount(PRIVATE_KEY);
+const client = new x402Client();
+client.register("eip155:*", new ExactEvmScheme(signer));
+const fetch402 = wrapFetch(fetch, client);
+```
+
+If you call POST /api/trial without payment headers, you receive HTTP 402 with payment requirements. The x402 SDK handles this automatically — it reads the 402 response, signs a USDC transfer, and retries.
+
+## POST /api/trial
+
+Create a new debate trial for a token. This is the only paid endpoint.
+
+Request body (JSON):
+- tokenAddress (string, required): Solana base58 address (32-44 chars) or EVM 0x address (42 chars)
+- chain (string, optional): "solana" | "base" | "ethereum" — defaults to "solana"
+- tokenName (string, optional): Human-readable token name
+- tokenSymbol (string, optional): Token ticker symbol
+
+Responses:
+- 201: { "trialId": "abc123xyz", "cooldown": false }
+- 429: Cooldown active. Includes Retry-After header. Body: { "cooldown": true, "trialId": "...", "remainingSeconds": 3600, "hint": "Pay via x402 to bypass cooldown" }
+- 400: { "error": "tokenAddress is required" } or { "error": "Invalid solana address format" }
+- 402: Payment required (x402 protocol response with payment details)
+- 409: { "error": "Trial creation conflict, please retry" }
+
+Notes:
+- Free users have a 2-hour cooldown per token+chain combination
+- Paid requests (via x402) bypass the cooldown entirely
+- Block explorer URLs (solscan.io, etherscan.io, basescan.org) are auto-parsed to extract addresses
+
+## GET /api/debate/{trialId}
+
+Stream the live debate via Server-Sent Events. Free, no authentication required.
+
+SSE event types:
+
+event: phase
+data: {"phase": "bull_opening", "status": "complete"}
+Description: Marks the start or completion of a debate phase.
+
+event: message_complete
+data: {"agent": "bull", "phase": "opening", "content": "Based on smart money...", "evidence": [{"endpoint": "smart-money netflow", "displayValue": "+$2.3M"}]}
+Description: A complete message from an agent with cited evidence from on-chain data.
+
+event: token_stats
+data: {"tokenIconUrl": "https://...", "priceUsd": 1.23, "mcapUsd": 1000000, "liquidityUsd": 500000}
+Description: Token market data (price, market cap, liquidity).
+
+event: verdict
+data: {"score": 42, "label": "Buy", "summary": "Based on strong smart money inflows...", "bull_conviction": 78, "bear_conviction": 35, "safety": "clean"}
+Description: The Judge's final verdict. Score ranges from -100 (Strong Sell) to +100 (Strong Buy). Labels: Strong Sell, Sell, Lean Sell, Neutral, Lean Buy, Buy, Strong Buy.
+
+event: error
+data: {"message": "Failed to fetch data", "recoverable": false}
+Description: An error occurred during the debate.
+
+event: done
+data: {}
+Description: The debate stream has ended. Close the connection.
+
+Notes:
+- If the trial is already completed, events are replayed from the database
+- If the trial is in progress, completed events are replayed then live events are streamed
+- The debate continues server-side even if the client disconnects
+
+## GET /api/verdict/{trialId}
+
+Get the final verdict JSON for a completed trial. Free, no authentication required.
+
+Responses:
+- 200: Verdict JSON
+  {
+    "id": "abc123",
+    "tokenAddress": "So11111111111111111111111111111111111111112",
+    "chain": "solana",
+    "tokenName": "Wrapped SOL",
+    "tokenSymbol": "SOL",
+    "score": 42,
+    "label": "Buy",
+    "summary": "Based on strong smart money inflows...",
+    "bullConviction": 78,
+    "bearConviction": 35,
+    "safety": "clean",
+    "safetyDetails": { ... },
+    "createdAt": 1712750000,
+    "completedAt": 1712750080
+  }
+- 202: Trial in progress. Includes Retry-After: 10 header. Body: { "pending": true, "status": "debating", "trialId": "...", "hint": "Stream GET /api/debate/{trialId} for live updates, or poll this endpoint." }
+- 404: { "error": "Trial not found" }
+
+## GET /api/trials?limit=10
+
+List recent completed trials. Free, no authentication required.
+
+Query parameters:
+- limit (number, optional): 1-50, defaults to 10
+
+Response (200):
+{
+  "trials": [
+    {
+      "id": "abc123",
+      "token_address": "So11...",
+      "token_symbol": "SOL",
+      "token_name": "Wrapped SOL",
+      "chain": "solana",
+      "verdict_label": "Buy",
+      "verdict_score": 42,
+      "status": "completed",
+      "created_at": 1712750000
+    }
+  ],
+  "count": 10
+}
+
+## GET /api/token/search?q={query}&chain={chain}
+
+Search tokens by name, symbol, or address. Free, no authentication required.
+
+Query parameters:
+- q (string, required): Search query
+- chain (string, optional): "solana" | "base" | "ethereum"
+
+Response (200):
+{
+  "results": [
+    {
+      "token_address": "So11...",
+      "token_symbol": "SOL",
+      "token_name": "Wrapped SOL",
+      "chain": "solana",
+      "market_cap_usd": 78000000000,
+      "source": "nansen"
+    }
+  ],
+  "source": "nansen"
+}

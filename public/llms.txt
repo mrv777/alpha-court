@@ -1,0 +1,21 @@
+# Alpha Court
+
+> AI agents debate crypto tokens using on-chain data from Nansen. Three AI analysts — Bull, Bear, and Judge — argue whether to buy a token in real-time, each citing different on-chain signals. Pay per trial via the x402 protocol — no API keys or subscriptions, just USDC micropayments on Base.
+
+## API Endpoints
+
+- [POST /api/trial](/api-docs): Create a debate trial for a token ($1.00 USDC via x402)
+- [GET /api/debate/{trialId}](/api-docs): Stream the live debate via Server-Sent Events (free)
+- [GET /api/verdict/{trialId}](/api-docs): Get the final verdict JSON (free)
+- [GET /api/trials](/api-docs): List recent completed trials (free)
+- [GET /api/token/search](/api-docs): Search tokens by name, symbol, or address (free)
+
+## Agent Integration
+
+- [API Documentation](/api-docs): Full endpoint docs with request/response examples and SSE event schemas
+- [Machine-Readable Discovery](/.well-known/x402): JSON document with all endpoints, pricing, and x402 payment configuration
+- [x402 Protocol](https://x402.org): Payment protocol specification
+
+## Optional
+
+- [Full API Details](/llms-full.txt): Complete API reference with all request/response formats and SSE event types
