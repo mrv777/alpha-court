@@ -72,6 +72,15 @@ export default function HomePage() {
 
       {/* Token input + chain selector + CTA */}
       <LandingClient recentTrials={recentTrials} />
+
+      <footer className="mt-16 mb-8 text-center text-xs text-court-text-dim">
+        <a
+          href="/api-docs"
+          className="underline underline-offset-2 hover:text-court-text-muted transition-colors"
+        >
+          API for Agents
+        </a>
+      </footer>
     </main>
   );
 }

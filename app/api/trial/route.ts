@@ -1,9 +1,11 @@
 import { nanoid } from "nanoid";
 import { getDb } from "@/lib/db";
+import { isPaidRequest } from "@/lib/x402";
 import type { Chain } from "@/lib/data/types";
 
 const VALID_CHAINS = new Set<Chain>(["solana", "base", "ethereum"]);
-const COOLDOWN_SECONDS = 30 * 60; // 30 minutes
+const COOLDOWN_HOURS = Number(process.env.COOLDOWN_HOURS || "2");
+const COOLDOWN_SECONDS = Math.round(COOLDOWN_HOURS * 3600);
 
 // Address validation patterns
 const SOLANA_ADDRESS_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
@@ -82,7 +84,7 @@ export async function POST(request: Request) {
       }
     | undefined;
 
-  if (existingTrial) {
+  if (existingTrial && !isPaidRequest(request)) {
     const cooldownEndsAt = existingTrial.created_at + COOLDOWN_SECONDS;
     return Response.json({
       cooldown: true,
@@ -92,6 +94,7 @@ export async function POST(request: Request) {
       verdictLabel: existingTrial.verdict_label,
       cooldownEndsAt,
       remainingSeconds: cooldownEndsAt - now,
+      cooldownTotal: COOLDOWN_SECONDS,
     });
   }
 

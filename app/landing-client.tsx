@@ -51,6 +51,9 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
   const [cooldown, setCooldown] = useState<{
     trialId: string;
     remainingSeconds: number;
+    totalSeconds: number;
+    verdictLabel: string | null;
+    verdictScore: number | null;
   } | null>(null);
 
   // Cooldown countdown timer
@@ -114,6 +117,9 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
         setCooldown({
           trialId: data.trialId,
           remainingSeconds: data.remainingSeconds,
+          totalSeconds: data.cooldownTotal,
+          verdictLabel: data.verdictLabel ?? null,
+          verdictScore: data.verdictScore ?? null,
         });
         return;
       }
@@ -130,8 +136,11 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
     !isSubmitting && (selectedToken !== null || rawInput !== null);
 
   const formatCountdown = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
+    if (h > 0)
+      return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
@@ -160,19 +169,44 @@ export function LandingClient({ recentTrials }: LandingClientProps) {
           <p className="mt-3 text-sm text-bear">{error}</p>
         )}
         {cooldown && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-judge">
-            <span>
-              Trial exists — new trial available in{" "}
-              <span className="font-mono font-bold">
-                {formatCountdown(cooldown.remainingSeconds)}
+          <div className="mt-3 space-y-2">
+            {/* Progress bar */}
+            <div className="h-1.5 w-full bg-white/[0.06] overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-judge/60 to-judge transition-all duration-1000 ease-linear"
+                style={{
+                  width: `${((cooldown.totalSeconds - cooldown.remainingSeconds) / cooldown.totalSeconds) * 100}%`,
+                }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-2 text-sm">
+              <span className="text-court-text-muted">
+                Next trial in{" "}
+                <span className="font-mono font-bold text-judge">
+                  {formatCountdown(cooldown.remainingSeconds)}
+                </span>
               </span>
-            </span>
-            <button
-              onClick={() => router.push(`/trial/${cooldown.trialId}`)}
-              className="underline underline-offset-2 hover:text-judge/80 transition-colors"
-            >
-              View existing trial
-            </button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(`/trial/${cooldown.trialId}`)}
+                className="shrink-0"
+              >
+                View Existing Trial
+              </Button>
+            </div>
+
+            {cooldown.verdictLabel && (
+              <p className="text-xs text-court-text-dim">
+                Verdict:{" "}
+                <span className="text-judge font-medium">
+                  {cooldown.verdictLabel}
+                </span>
+                {cooldown.verdictScore !== null &&
+                  ` (${cooldown.verdictScore > 0 ? "+" : ""}${cooldown.verdictScore})`}
+              </p>
+            )}
           </div>
         )}
 
