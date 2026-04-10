@@ -116,10 +116,11 @@ describe("VerdictCard HTML generation", () => {
     expect(html).not.toContain("...");
   });
 
-  it("includes SVG gauge", () => {
+  it("includes score bar gauge", () => {
     const html = buildVerdictCardHtml(baseData);
-    expect(html).toContain("<svg");
-    expect(html).toContain("</svg>");
+    // Score bar uses HTML divs, not SVG
+    expect(html).toContain("-100");
+    expect(html).toContain("+100");
   });
 
   it("formats positive score with + prefix in gauge", () => {

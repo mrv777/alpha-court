@@ -81,7 +81,14 @@ export async function GET() {
       "1. POST /api/trial with tokenAddress and chain (paid via x402)",
       "2. GET /api/debate/{trialId} to stream the live debate via SSE (free)",
       "3. GET /api/verdict/{trialId} to get the final verdict JSON (free)",
+      "4. If verdict is BUY/SELL (Solana or Base only), the response includes a 'trade' object with a ready-to-use `nansen trade quote` command. Execute it with the Nansen CLI to swap via DEX.",
     ],
+    tradingIntegration: {
+      description:
+        "Verdict responses for BUY/SELL signals include a pre-built nansen trade command. Agents with the Nansen CLI installed can execute trades directly.",
+      requires: "nansen-cli (npm i -g nansen-cli), a Nansen wallet (nansen wallet create), and USDC + gas on the target chain.",
+      skillRef: "https://github.com/nansen-ai/nansen-cli/tree/main/skills/nansen-trading",
+    },
     docsUrl: appUrl ? `${appUrl}/api-docs` : "/api-docs",
   });
 }

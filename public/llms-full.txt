@@ -7,6 +7,7 @@
 1. POST /api/trial with a tokenAddress and chain (paid via x402 — $1.00 USDC)
 2. GET /api/debate/{trialId} to stream the live debate via SSE (free)
 3. GET /api/verdict/{trialId} to get the final verdict JSON (free)
+4. If verdict is BUY/SELL (Solana & Base only), the response includes a `trade` object with a ready-to-use `nansen trade quote` command
 
 ## Payment (x402)
 
@@ -111,8 +112,19 @@ Responses:
     "safety": "clean",
     "safetyDetails": { ... },
     "createdAt": 1712750000,
-    "completedAt": 1712750080
+    "completedAt": 1712750080,
+    "trade": {
+      "action": "buy",
+      "command": "nansen trade quote --chain solana --from USDC --to EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm --amount 50 --amount-unit usd",
+      "note": "Get a swap quote to buy $50 worth, then execute with: nansen trade execute --quote <quoteId>. Requires a Nansen wallet (nansen wallet create). Uses SOL for gas."
+    }
   }
+
+  Notes:
+  - The "trade" field is only present for BUY/STRONG BUY/SELL/STRONG SELL verdicts on Solana or Base chains
+  - "Lean Buy", "Lean Sell", and "Hold" verdicts do not include trade suggestions
+  - The suggested $50 amount is a default — agents can adjust the --amount flag as needed
+
 - 202: Trial in progress. Includes Retry-After: 10 header. Body: { "pending": true, "status": "debating", "trialId": "...", "hint": "Stream GET /api/debate/{trialId} for live updates, or poll this endpoint." }
 - 404: { "error": "Trial not found" }
 

@@ -16,6 +16,15 @@
 - [Machine-Readable Discovery](/.well-known/x402): JSON document with all endpoints, pricing, and x402 payment configuration
 - [x402 Protocol](https://x402.org): Payment protocol specification
 
+## Trading Integration
+
+When the verdict is BUY or SELL (Solana and Base chains only), the `/api/verdict/{trialId}` response includes a `trade` object with a ready-to-use `nansen trade quote` command. Agents with the Nansen CLI can go from analysis to execution:
+
+1. Get verdict: `GET /api/verdict/{trialId}` -> `{ ..., trade: { action: "buy", command: "nansen trade quote --chain solana --from USDC --to <address> --amount 50 --amount-unit usd" } }`
+2. Execute quote: `nansen trade execute --quote <quoteId>`
+
+Requires: `nansen-cli` (npm i -g nansen-cli), a Nansen wallet, and USDC + gas on the target chain.
+
 ## Optional
 
 - [Full API Details](/llms-full.txt): Complete API reference with all request/response formats and SSE event types

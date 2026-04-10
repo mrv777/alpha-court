@@ -1,5 +1,38 @@
 import { getDb } from "@/lib/db";
 
+const TRADABLE_CHAINS = new Set(["solana", "base"]);
+
+function buildTradeSuggestion(
+  label: string | null,
+  tokenAddress: string,
+  chain: string
+): { action: string; command: string; note: string } | null {
+  if (!label || !TRADABLE_CHAINS.has(chain)) return null;
+
+  const upper = label.toUpperCase();
+  const nativeToken = chain === "solana" ? "SOL" : "ETH";
+
+  // Only suggest trades for strong signals — "Lean Buy"/"Lean Sell" are excluded
+  // because they indicate notable risks or caveats
+  if (upper === "STRONG BUY" || upper === "BUY") {
+    return {
+      action: "buy",
+      command: `nansen trade quote --chain ${chain} --from USDC --to ${tokenAddress} --amount 50 --amount-unit usd`,
+      note: `Get a swap quote to buy $50 worth, then execute with: nansen trade execute --quote <quoteId>. Requires a Nansen wallet (nansen wallet create). Uses ${nativeToken} for gas.`,
+    };
+  }
+
+  if (upper === "STRONG SELL" || upper === "SELL") {
+    return {
+      action: "sell",
+      command: `nansen trade quote --chain ${chain} --from ${tokenAddress} --to USDC --amount 50 --amount-unit usd`,
+      note: `Get a swap quote to sell $50 worth, then execute with: nansen trade execute --quote <quoteId>. Requires a Nansen wallet with token balance.`,
+    };
+  }
+
+  return null;
+}
+
 interface VerdictRow {
   id: string;
   token_address: string;
@@ -64,6 +97,13 @@ export async function GET(
       })()
     : null;
 
+  // Build trade suggestion for agents when verdict is actionable
+  const trade = buildTradeSuggestion(
+    trial.verdict_label,
+    trial.token_address,
+    trial.chain
+  );
+
   return Response.json({
     id: trial.id,
     tokenAddress: trial.token_address,
@@ -79,5 +119,6 @@ export async function GET(
     safetyDetails: safetyDetails,
     createdAt: trial.created_at,
     completedAt: trial.completed_at,
+    ...(trade ? { trade } : {}),
   });
 }

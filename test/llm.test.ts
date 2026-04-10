@@ -32,7 +32,7 @@ import { streamChat, structuredOutput, getJudgeTools, LLMError, FAST, REASONING 
 describe("model constants", () => {
   it("exports correct model names", () => {
     expect(FAST).toBe("grok-4-1-fast-non-reasoning");
-    expect(REASONING).toBe("grok-4-1-fast-reasoning");
+    expect(REASONING).toBe("grok-4.20-reasoning");
   });
 });
 

@@ -59,15 +59,16 @@ afterEach(() => {
 });
 
 describe("TTL values match spec", () => {
-  it("token info = 5 min", () => expect(TTL.TOKEN_INFO).toBe(300));
-  it("ohlcv = 5 min", () => expect(TTL.OHLCV).toBe(300));
-  it("who-bought-sold = 10 min", () => expect(TTL.WHO_BOUGHT_SOLD).toBe(600));
-  it("dex-trades = 10 min", () => expect(TTL.DEX_TRADES).toBe(600));
-  it("sm-netflow = 10 min", () => expect(TTL.SM_NETFLOW).toBe(600));
-  it("holders = 15 min", () => expect(TTL.HOLDERS).toBe(900));
-  it("flows = 15 min", () => expect(TTL.FLOWS).toBe(900));
-  it("profiler = 30 min", () => expect(TTL.PROFILER).toBe(1800));
-  it("search = 5 min", () => expect(TTL.SEARCH).toBe(300));
+  const SEVEN_DAYS = 604800;
+  it("token info = 7 days", () => expect(TTL.TOKEN_INFO).toBe(SEVEN_DAYS));
+  it("ohlcv = 7 days", () => expect(TTL.OHLCV).toBe(SEVEN_DAYS));
+  it("who-bought-sold = 7 days", () => expect(TTL.WHO_BOUGHT_SOLD).toBe(SEVEN_DAYS));
+  it("dex-trades = 7 days", () => expect(TTL.DEX_TRADES).toBe(SEVEN_DAYS));
+  it("sm-netflow = 7 days", () => expect(TTL.SM_NETFLOW).toBe(SEVEN_DAYS));
+  it("holders = 7 days", () => expect(TTL.HOLDERS).toBe(SEVEN_DAYS));
+  it("flows = 7 days", () => expect(TTL.FLOWS).toBe(SEVEN_DAYS));
+  it("profiler = 7 days", () => expect(TTL.PROFILER).toBe(SEVEN_DAYS));
+  it("search = 7 days", () => expect(TTL.SEARCH).toBe(SEVEN_DAYS));
 });
 
 describe("Endpoint command construction", () => {

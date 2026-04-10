@@ -92,7 +92,7 @@ describe("POST /api/trial", () => {
     expect(data.error).toContain("Invalid ethereum address");
   });
 
-  it("enforces 30-min cooldown for same token+chain", async () => {
+  it("enforces cooldown for same token+chain", async () => {
     const addr = "So11111111111111111111111111111111111111112";
 
     // First trial
@@ -102,16 +102,16 @@ describe("POST /api/trial", () => {
     expect(res1.status).toBe(201);
     const data1 = await res1.json();
 
-    // Second trial — should hit cooldown
+    // Second trial — should hit cooldown (429)
     const res2 = await POST(
       makeRequest({ tokenAddress: addr, chain: "solana" }) as any
     );
-    expect(res2.status).toBe(200);
+    expect(res2.status).toBe(429);
     const data2 = await res2.json();
     expect(data2.cooldown).toBe(true);
     expect(data2.trialId).toBe(data1.trialId);
     expect(data2.remainingSeconds).toBeGreaterThan(0);
-    expect(data2.remainingSeconds).toBeLessThanOrEqual(1800);
+    expect(data2.remainingSeconds).toBeLessThanOrEqual(7200);
   });
 
   it("allows same token on different chain", async () => {
@@ -139,8 +139,8 @@ describe("POST /api/trial", () => {
     const addr = "So11111111111111111111111111111111111111112";
     const db = getDb();
 
-    // Insert an old trial (35 min ago — past cooldown)
-    const oldTime = Math.floor(Date.now() / 1000) - 35 * 60;
+    // Insert an old trial (3 hours ago — past 2-hour cooldown)
+    const oldTime = Math.floor(Date.now() / 1000) - 3 * 3600;
     db.prepare(
       `INSERT INTO trials (id, token_address, chain, status, created_at)
        VALUES (?, ?, ?, 'completed', ?)`

@@ -131,6 +131,8 @@ Alpha Court exposes a pay-per-use API via the [x402 protocol](https://x402.org).
 | `/api/trials` | GET | Free |
 | `/api/token/search` | GET | Free |
 
+**Analysis → Trade:** For BUY/SELL verdicts on Solana or Base, the verdict response includes a ready-to-use `nansen trade quote` command. Agents with the Nansen CLI can go from research to execution in one flow. See the [nansen-trading skill](skills/nansen-trading/SKILL.md) for trade command reference.
+
 **Agent discovery:** `GET /.well-known/x402` returns a machine-readable JSON describing all endpoints, pricing, and payment configuration.
 
 **Full documentation:** See [`/api-docs`](https://alpha.cookd.wtf/api-docs) for integration examples and SSE event schemas.

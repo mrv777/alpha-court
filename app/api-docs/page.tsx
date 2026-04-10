@@ -232,6 +232,43 @@ const result = await verdict.json();`}
           </div>
         </section>
 
+        {/* Trading integration */}
+        <section>
+          <h2 className="font-heading text-lg font-semibold text-court-text mb-4">
+            Analysis &rarr; Trade
+          </h2>
+          <p className="text-sm text-court-text-muted mb-3">
+            When the verdict is <span className="text-bull font-semibold">BUY</span> or{" "}
+            <span className="text-bear font-semibold">SELL</span>, the verdict response
+            includes a <code className="text-judge">trade</code> object with a ready-to-use{" "}
+            <code className="text-judge">nansen trade quote</code> command. Agents with the
+            Nansen CLI can go from analysis to execution in one flow.
+          </p>
+          <pre className="overflow-x-auto bg-white/[0.03] border border-white/[0.06] p-4 text-xs text-court-text font-mono leading-relaxed">
+            {`// Verdict response includes trade suggestion (Solana & Base only)
+{
+  "score": 65, "label": "STRONG BUY", ...,
+  "trade": {
+    "action": "buy",
+    "command": "nansen trade quote --chain solana --from USDC --to <address> --amount 50 --amount-unit usd",
+    "note": "Execute with: nansen trade execute --quote <quoteId>"
+  }
+}
+
+// Agent executes the trade via Nansen CLI
+# Step 1: Get quote
+$ nansen trade quote --chain solana --from USDC --to <address> --amount 50 --amount-unit usd
+# → Quote ID: 1712750000000-abc123
+
+# Step 2: Execute
+$ nansen trade execute --quote 1712750000000-abc123`}
+          </pre>
+          <p className="mt-2 text-xs text-court-text-dim">
+            Requires: <code>nansen-cli</code> (npm i -g nansen-cli), a Nansen wallet, and USDC + gas on the target chain.
+            Trading is supported on Solana and Base only.
+          </p>
+        </section>
+
         {/* Agent discovery */}
         <section>
           <h2 className="font-heading text-lg font-semibold text-court-text mb-4">
